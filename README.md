@@ -44,7 +44,7 @@ Beyond standard file downloading capabilities, VirusDownloader includes several 
 | :--- | :--- | :--- |
 | Flutter SDK | >= 3.22.0 | Stable channel |
 | Dart SDK | >= 3.4.0 < 4.0.0 | Included with Flutter SDK |
-| Desktop Build Tools | Platform-specific | Visual Studio (Windows), Xcode (macOS), build-essential (Linux) |
+| Desktop Build Tools | Platform-specific | Visual Studio (Windows), Xcode (macOS), build-essential, libgtk-3-dev, libjson-glib-dev (Linux) |
 
 ---
 
