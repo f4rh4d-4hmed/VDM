@@ -37,6 +37,7 @@ commit_msg   = os.environ.get("COMMIT_MSG",    "N/A")
 platform     = os.environ.get("PLATFORM",      "unknown")
 triggered_by = os.environ.get("TRIGGERED_BY",  "unknown")
 win_result   = os.environ.get("WIN_RESULT",    "skipped")
+mac_result   = os.environ.get("MAC_RESULT",    "skipped")
 apk_result   = os.environ.get("APK_RESULT",    "skipped")
 lnx_result   = os.environ.get("LNX_RESULT",    "skipped")
 build_label  = os.environ.get("BUILD_LABEL",   "")
@@ -237,6 +238,7 @@ def run_summary() -> None:
         "",
         "<b>Build Results:</b>",
         status_line("Windows", win_result),
+        status_line("macOS",   mac_result),
         status_line("Android", apk_result),
         status_line("Linux",   lnx_result),
     ]

@@ -1,8 +1,6 @@
 name: Build VirusDownloader
 
 on:
-  push:
-    branches: [ main, master ]
   pull_request:
     branches: [ main, master ]
   workflow_dispatch:
@@ -15,6 +13,7 @@ on:
         options:
           - all
           - windows
+          - macos
           - android
           - linux
 
@@ -67,7 +66,7 @@ jobs:
   build-windows:
     name: Build Windows
     needs: [analyze-and-test]
-    if: ${{ github.event_name == 'push' || github.event.inputs.platform == 'all' || github.event.inputs.platform == 'windows' }}
+    if: ${{ github.event.inputs.platform == 'all' || github.event.inputs.platform == 'windows' }}
     runs-on: windows-latest
     steps:
       - name: Checkout repository
@@ -137,12 +136,92 @@ jobs:
           python3 .github/scripts/telegram_upload.py "$FILE" 2>/dev/null || python .github/scripts/telegram_upload.py "$FILE"
 
   # ============================================
+  # macOS Build
+  # ============================================
+  build-macos:
+    name: Build macOS
+    needs: [analyze-and-test]
+    if: ${{ github.event.inputs.platform == 'all' || github.event.inputs.platform == 'macos' }}
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Calculate version from commits
+        shell: bash
+        run: |
+          N=$(git rev-list --count HEAD)
+          MAJOR=$((1 + N / 100))
+          MINOR=$(((N / 10) % 10))
+          PATCH=$((N % 10))
+          BUILD_NAME="${MAJOR}.${MINOR}.${PATCH}-beta"
+          echo "BUILD_NAME=${BUILD_NAME}" >> $GITHUB_ENV
+          echo "BUILD_NUMBER=${N}" >> $GITHUB_ENV
+          echo "Building VirusDownloader v${BUILD_NAME} (build ${N})"
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build macOS Release
+        run: flutter build macos --release --build-name=${{ env.BUILD_NAME }} --build-number=${{ env.BUILD_NUMBER }}
+
+      - name: Upload macOS Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: VirusDownloader-macOS-v${{ env.BUILD_NAME }}
+          path: build/macos/Build/Products/Release/
+          retention-days: 14
+
+      - name: Compress macOS Build for Telegram
+        shell: bash
+        run: |
+          APP_PATH=$(find build/macos/Build/Products/Release -maxdepth 1 -name "*.app" | head -n 1)
+          if [ -n "$APP_PATH" ]; then
+            ditto -c -k --keepParent "$APP_PATH" "VirusDownloader-macOS-v${{ env.BUILD_NAME }}.zip"
+          elif [ -d "build/macos/Build/Products/Release" ]; then
+            (cd build/macos/Build/Products/Release && zip -r -y "../../../../VirusDownloader-macOS-v${{ env.BUILD_NAME }}.zip" .)
+          fi
+
+      - name: Send macOS build to Telegram
+        if: always()
+        shell: bash
+        env:
+          TG_TOKEN: ${{ secrets.TG_TOKEN }}
+          TG_CHAT_ID: ${{ secrets.TG_CHAT_ID || '6779570748' }}
+          COMMIT_MSG: ${{ github.event.head_commit.message || github.sha }}
+          TRIGGERED_BY: ${{ github.actor }}
+          BUILD_LABEL: "macOS"
+          BUILD_NAME: ${{ env.BUILD_NAME }}
+          BUILD_NUMBER: ${{ env.BUILD_NUMBER }}
+        run: |
+          FILE=""
+          for f in VirusDownloader-macOS-*.zip; do
+            if [ -f "$f" ]; then
+              FILE="$f"
+              break
+            fi
+          done
+          if [ -z "$FILE" ]; then
+            echo "No macOS build found, skipping Telegram upload."
+            exit 0
+          fi
+          python3 .github/scripts/telegram_upload.py "$FILE" 2>/dev/null || python .github/scripts/telegram_upload.py "$FILE"
+
+  # ============================================
   # Android Build
   # ============================================
   build-android:
     name: Build Android
     needs: [analyze-and-test]
-    if: ${{ github.event_name == 'push' || github.event.inputs.platform == 'all' || github.event.inputs.platform == 'android' }}
+    if: ${{ github.event.inputs.platform == 'all' || github.event.inputs.platform == 'android' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -212,7 +291,7 @@ jobs:
   build-linux:
     name: Build Linux
     needs: [analyze-and-test]
-    if: ${{ github.event_name == 'push' || github.event.inputs.platform == 'all' || github.event.inputs.platform == 'linux' }}
+    if: ${{ github.event.inputs.platform == 'all' || github.event.inputs.platform == 'linux' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
