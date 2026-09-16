@@ -1,0 +1,240 @@
+name: Build and Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: 'Select platform to build'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - windows
+          - macos
+          - android
+          - linux
+
+permissions:
+  contents: write
+
+jobs:
+  # ============================================
+  # Version + Tag
+  # ============================================
+  version:
+    name: Compute Version and Tag
+    runs-on: ubuntu-latest
+    outputs:
+      build_name: ${{ steps.ver.outputs.build_name }}
+      build_number: ${{ steps.ver.outputs.build_number }}
+      tag: ${{ steps.ver.outputs.tag }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Calculate version from commits
+        id: ver
+        shell: bash
+        run: |
+          N=$(git rev-list --count HEAD)
+          MAJOR=$((1 + N / 100))
+          MINOR=$(((N / 10) % 10))
+          PATCH=$((N % 10))
+          BUILD_NAME="${MAJOR}.${MINOR}.${PATCH}"
+          TAG="v${BUILD_NAME}+${N}"
+          echo "build_name=${BUILD_NAME}" >> "$GITHUB_OUTPUT"
+          echo "build_number=${N}" >> "$GITHUB_OUTPUT"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "Building VirusDownloader ${TAG}"
+
+      - name: Create and push tag
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag "${{ steps.ver.outputs.tag }}"
+          git push origin "${{ steps.ver.outputs.tag }}"
+
+  # ============================================
+  # Windows Build
+  # ============================================
+  build-windows:
+    name: Build Windows
+    needs: [version]
+    if: ${{ github.event.inputs.platform == 'all' || github.event.inputs.platform == 'windows' }}
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build Windows Release
+        run: flutter build windows --release --build-name=${{ needs.version.outputs.build_name }} --build-number=${{ needs.version.outputs.build_number }}
+
+      - name: Compress Windows Build
+        shell: bash
+        run: |
+          7z a -tzip "VirusDownloader-Windows-x64-${{ needs.version.outputs.tag }}.zip" "./build/windows/x64/runner/Release/*"
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-release
+          path: VirusDownloader-Windows-x64-${{ needs.version.outputs.tag }}.zip
+          retention-days: 1
+
+  # ============================================
+  # macOS Build
+  # ============================================
+  build-macos:
+    name: Build macOS
+    needs: [version]
+    if: ${{ github.event.inputs.platform == 'all' || github.event.inputs.platform == 'macos' }}
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build macOS Release
+        run: flutter build macos --release --build-name=${{ needs.version.outputs.build_name }} --build-number=${{ needs.version.outputs.build_number }}
+
+      - name: Compress macOS Build
+        shell: bash
+        run: |
+          APP_PATH=$(find build/macos/Build/Products/Release -maxdepth 1 -name "*.app" | head -n 1)
+          if [ -n "$APP_PATH" ]; then
+            ditto -c -k --keepParent "$APP_PATH" "VirusDownloader-macOS-${{ needs.version.outputs.tag }}.zip"
+          else
+            (cd build/macos/Build/Products/Release && zip -r -y "../../../../VirusDownloader-macOS-${{ needs.version.outputs.tag }}.zip" .)
+          fi
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-release
+          path: VirusDownloader-macOS-${{ needs.version.outputs.tag }}.zip
+          retention-days: 1
+
+  # ============================================
+  # Android Build
+  # ============================================
+  build-android:
+    name: Build Android
+    needs: [version]
+    if: ${{ github.event.inputs.platform == 'all' || github.event.inputs.platform == 'android' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build Android APK
+        run: flutter build apk --release --build-name=${{ needs.version.outputs.build_name }} --build-number=${{ needs.version.outputs.build_number }}
+
+      - name: Rename APK
+        run: cp build/app/outputs/flutter-apk/app-release.apk VirusDownloader-Android-${{ needs.version.outputs.tag }}.apk
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-release
+          path: VirusDownloader-Android-${{ needs.version.outputs.tag }}.apk
+          retention-days: 1
+
+  # ============================================
+  # Linux Build
+  # ============================================
+  build-linux:
+    name: Build Linux
+    needs: [version]
+    if: ${{ github.event.inputs.platform == 'all' || github.event.inputs.platform == 'linux' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Linux Build Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev libjson-glib-dev
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build Linux Release
+        run: flutter build linux --release --build-name=${{ needs.version.outputs.build_name }} --build-number=${{ needs.version.outputs.build_number }}
+
+      - name: Compress Linux Build
+        run: |
+          tar -czvf VirusDownloader-Linux-x64-${{ needs.version.outputs.tag }}.tar.gz -C build/linux/x64/release/bundle .
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-release
+          path: VirusDownloader-Linux-x64-${{ needs.version.outputs.tag }}.tar.gz
+          retention-days: 1
+
+  # ============================================
+  # Publish GitHub Release
+  # ============================================
+  release:
+    name: Publish GitHub Release
+    needs: [version, build-windows, build-macos, build-android, build-linux]
+    if: always() && needs.version.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.version.outputs.tag }}
+          name: VirusDownloader ${{ needs.version.outputs.tag }}
+          files: dist/*
+          generate_release_notes: true
+          
