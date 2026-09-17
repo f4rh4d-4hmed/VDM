@@ -9,6 +9,7 @@ import '../../core/constants.dart';
 import '../../core/enums.dart';
 import '../../core/utils.dart';
 import '../../domain/models/download_task.dart';
+import '../services/antivirus_service.dart';
 import '../services/ffmpeg_service.dart';
 import '../services/file_service.dart';
 import '../services/http_download_service.dart';
@@ -27,6 +28,7 @@ class DownloadRepository extends ChangeNotifier {
   final FfmpegService? ffmpegService;
   final NotificationService? notificationService;
   final IntegrityService? integrityService;
+  final AntivirusService antivirusService;
 
   List<DownloadTask> _tasks = [];
   final Map<String, CancelToken> _activeTokens = {};
@@ -42,7 +44,8 @@ class DownloadRepository extends ChangeNotifier {
     this.ffmpegService,
     this.notificationService,
     this.integrityService,
-  }) {
+    AntivirusService? antivirusService,
+  }) : antivirusService = antivirusService ?? AntivirusService() {
     NotificationService.onActionReceived = _handleNotificationAction;
   }
 
@@ -124,10 +127,21 @@ class DownloadRepository extends ChangeNotifier {
         final exists = File(task.savePath).existsSync();
         
         if (!exists && !task.fileMissing) {
-          _tasks[i] = task.copyWith(fileMissing: true);
+          final isSuspicious = AppUtils.isSuspiciousFormat(task.fileName);
+          _tasks[i] = task.copyWith(
+            fileMissing: true,
+            isQuarantinedByAntivirus: isSuspicious,
+            errorMessage: isSuspicious
+                ? 'Quarantined by Antivirus: System security software removed this file. VirusDownloader did not fail.'
+                : null,
+          );
           hasChanges = true;
         } else if (exists && task.fileMissing) {
-          _tasks[i] = task.copyWith(fileMissing: false);
+          _tasks[i] = task.copyWith(
+            fileMissing: false,
+            isQuarantinedByAntivirus: false,
+            clearError: true,
+          );
           hasChanges = true;
         }
       }
@@ -756,6 +770,13 @@ class DownloadRepository extends ChangeNotifier {
         if (settings.autoRecheckOnComplete && current.isResumable) {
           recheckTask(taskId);
         }
+
+        // Attach Windows Mark of the Web (Zone.Identifier) for system antivirus scanning
+        await antivirusService.attachMarkOfTheWeb(
+          finalSavePath,
+          sourceUrl: current.url,
+          referrerUrl: current.headers?['Referer'] ?? current.headers?['referer'],
+        );
       }
     } on DioException catch (e) {
       if (CancelToken.isCancel(e)) {
@@ -764,10 +785,12 @@ class DownloadRepository extends ChangeNotifier {
         final errIndex = _tasks.indexWhere((t) => t.id == taskId);
         if (errIndex != -1) {
           final friendlyError = AppUtils.getHumanReadableError(e);
+          final isQuarantine = antivirusService.isQuarantineError(e) || friendlyError.contains('Antivirus');
           _tasks[errIndex] = _tasks[errIndex].copyWith(
             status: DownloadStatus.failed,
             speedBytesPerSec: 0.0,
             errorMessage: friendlyError,
+            isQuarantinedByAntivirus: isQuarantine,
           );
           _persistTasks();
           notifyListeners();
@@ -783,10 +806,12 @@ class DownloadRepository extends ChangeNotifier {
       final errIndex = _tasks.indexWhere((t) => t.id == taskId);
       if (errIndex != -1) {
         final friendlyError = AppUtils.getHumanReadableError(e);
+        final isQuarantine = antivirusService.isQuarantineError(e) || friendlyError.contains('Antivirus');
         _tasks[errIndex] = _tasks[errIndex].copyWith(
           status: DownloadStatus.failed,
           speedBytesPerSec: 0.0,
           errorMessage: friendlyError,
+          isQuarantinedByAntivirus: isQuarantine,
         );
         _persistTasks();
         notifyListeners();

@@ -19,6 +19,7 @@ class DownloadTask {
   final String? fileHash;
   final HashAlgorithm? hashAlgorithm;
   final bool fileMissing;
+  final bool isQuarantinedByAntivirus;
 
   const DownloadTask({
     required this.id,
@@ -38,6 +39,7 @@ class DownloadTask {
     this.fileHash,
     this.hashAlgorithm,
     this.fileMissing = false,
+    this.isQuarantinedByAntivirus = false,
   });
 
   double get progress {
@@ -84,6 +86,7 @@ class DownloadTask {
     String? fileHash,
     HashAlgorithm? hashAlgorithm,
     bool? fileMissing,
+    bool? isQuarantinedByAntivirus,
   }) {
     return DownloadTask(
       id: id ?? this.id,
@@ -103,6 +106,7 @@ class DownloadTask {
       fileHash: fileHash ?? this.fileHash,
       hashAlgorithm: hashAlgorithm ?? this.hashAlgorithm,
       fileMissing: fileMissing ?? this.fileMissing,
+      isQuarantinedByAntivirus: isQuarantinedByAntivirus ?? this.isQuarantinedByAntivirus,
     );
   }
 }

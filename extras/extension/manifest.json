@@ -44,6 +44,12 @@
   ],
   "host_permissions": [
     "<all_urls>"
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["security.json"],
+      "matches": ["<all_urls>"]
+    }
   ]
 }
 

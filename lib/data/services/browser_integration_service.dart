@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -223,6 +224,52 @@ class BrowserIntegrationService {
     final extPath = await getExtensionPath();
     await Clipboard.setData(ClipboardData(text: extPath));
     return extPath;
+  }
+
+  /// Automatically syncs the extension security configuration (auth token and port)
+  /// to the extension folder so the extension works out of the box without manual copy-paste.
+  Future<void> syncExtensionSecurityConfig({
+    required String token,
+    required int port,
+  }) async {
+    final jsonContent = jsonEncode({
+      'authToken': token,
+      'serverPort': port,
+      'lastSynced': DateTime.now().toIso8601String(),
+    });
+
+    final targetDirs = <String>[];
+
+    // 1. Current working directory extras/extension
+    final localExtras = p.join(Directory.current.path, 'extras', 'extension');
+    if (Directory(localExtras).existsSync()) {
+      targetDirs.add(localExtras);
+    }
+
+    // 2. Executable directory extras/extension
+    final exeDir = File(Platform.resolvedExecutable).parent.path;
+    final exeExtras = p.join(exeDir, 'extras', 'extension');
+    if (Directory(exeExtras).existsSync()) {
+      targetDirs.add(exeExtras);
+    }
+
+    // 3. Application support directory
+    try {
+      final appSupport = await getApplicationSupportDirectory();
+      final appExtDir = p.join(appSupport.path, 'extension');
+      if (Directory(appExtDir).existsSync()) {
+        targetDirs.add(appExtDir);
+      }
+    } catch (_) {}
+
+    for (final dir in targetDirs) {
+      try {
+        final secFile = File(p.join(dir, 'security.json'));
+        await secFile.writeAsString(jsonContent, flush: true);
+      } catch (e) {
+        debugPrint('Failed to write security.json in $dir: $e');
+      }
+    }
   }
 }
 

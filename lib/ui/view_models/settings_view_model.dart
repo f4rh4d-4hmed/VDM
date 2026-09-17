@@ -165,6 +165,24 @@ class SettingsViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> updateConfirmDownloads(bool enabled) async {
+    final updated = settings.copyWith(confirmDownloads: enabled);
+    await repository.updateSettings(updated);
+    notifyListeners();
+  }
+
+  Future<String> regenerateExtensionAuthToken() async {
+    final newToken = AppUtils.generateSecureToken();
+    final updated = settings.copyWith(extensionAuthToken: newToken);
+    await repository.updateSettings(updated);
+    await browserService.syncExtensionSecurityConfig(
+      token: newToken,
+      port: integrationServer.serverPort,
+    );
+    notifyListeners();
+    return newToken;
+  }
+
   String? addProxy(String input) {
     final trimmed = input.trim();
     if (trimmed.contains('\n') || trimmed.contains('\r') || trimmed.contains(',') || trimmed.contains(';')) {

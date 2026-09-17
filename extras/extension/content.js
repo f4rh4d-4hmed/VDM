@@ -207,7 +207,7 @@
           badge.classList.remove('vd-btn-loading');
           if (response && response.success) {
             badge.classList.add('vd-btn-success');
-            badge.querySelector('span').innerText = '✓ Sent to VirusDownloader!';
+            badge.querySelector('span').innerText = 'Sent to VirusDownloader!';
             setTimeout(() => {
               badge.classList.remove('vd-btn-success');
               badge.querySelector('span').innerText = 'Download with VirusDownloader';

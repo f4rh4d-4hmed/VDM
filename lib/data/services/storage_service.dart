@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/constants.dart';
 import '../../core/enums.dart';
+import '../../core/utils.dart';
 import '../../domain/models/app_settings.dart';
 import '../../domain/models/download_task.dart';
 import '../../domain/models/proxy_config.dart';
@@ -74,6 +75,11 @@ class StorageService {
             .toList();
       }
 
+      var token = data['extensionAuthToken'] as String? ?? '';
+      if (token.isEmpty) {
+        token = AppUtils.generateSecureToken();
+      }
+
       return AppSettings(
         defaultSavePath: data['defaultSavePath'] as String? ?? '',
         maxConcurrentDownloads: data['maxConcurrentDownloads'] as int? ?? 3,
@@ -86,8 +92,11 @@ class StorageService {
         autoRecheckOnComplete: data['autoRecheckOnComplete'] as bool? ?? false,
         runInBackground: data['runInBackground'] as bool? ?? false,
         autoStartOnBoot: data['autoStartOnBoot'] as bool? ?? false,
+        confirmDownloads: data['confirmDownloads'] as bool? ?? true,
+        extensionAuthToken: token,
       );
     } catch (_) {
+      return AppSettings(extensionAuthToken: AppUtils.generateSecureToken());
       return const AppSettings();
     }
   }
@@ -107,6 +116,8 @@ class StorageService {
       'autoRecheckOnComplete': settings.autoRecheckOnComplete,
       'runInBackground': settings.runInBackground,
       'autoStartOnBoot': settings.autoStartOnBoot,
+      'confirmDownloads': settings.confirmDownloads,
+      'extensionAuthToken': settings.extensionAuthToken,
     };
     await prefs.setString(AppConstants.storageKeySettings, jsonEncode(data));
   }

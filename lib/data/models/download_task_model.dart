@@ -23,6 +23,7 @@ class DownloadTaskModel {
       'fileHash': task.fileHash,
       'hashAlgorithm': task.hashAlgorithm?.name,
       'fileMissing': task.fileMissing,
+      'isQuarantinedByAntivirus': task.isQuarantinedByAntivirus,
     };
   }
 
@@ -76,6 +77,7 @@ class DownloadTaskModel {
       fileHash: json['fileHash'] as String?,
       hashAlgorithm: hashAlgo,
       fileMissing: json['fileMissing'] as bool? ?? false,
+      isQuarantinedByAntivirus: json['isQuarantinedByAntivirus'] as bool? ?? false,
     );
   }
 }

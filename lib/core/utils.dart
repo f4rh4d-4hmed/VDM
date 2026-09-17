@@ -364,10 +364,24 @@ class AppUtils {
       }
     }
 
-    // Handle FileSystemException (Storage / Permissions)
+    // Handle FileSystemException (Storage / Permissions / Antivirus)
     if (error is FileSystemException) {
       final msg = error.message.toLowerCase();
       final osMsg = error.osError?.message.toLowerCase() ?? '';
+      final errorCode = error.osError?.errorCode ?? 0;
+
+      // Windows error code 225 is ERROR_VIRUS_INFECTED:
+      // "Operation did not complete successfully because the file contains a virus or potentially unwanted software."
+      if (errorCode == 225 ||
+          msg.contains('contains a virus') ||
+          osMsg.contains('contains a virus') ||
+          msg.contains('potentially unwanted') ||
+          osMsg.contains('potentially unwanted') ||
+          msg.contains('antivirus') ||
+          osMsg.contains('antivirus')) {
+        return 'Quarantined by Antivirus: System security software detected a threat and removed this file. VirusDownloader did not fail.';
+      }
+
       if (msg.contains('no space') || osMsg.contains('no space')) {
         return 'Storage full. Free up device space.';
       }
@@ -447,8 +461,66 @@ class AppUtils {
     if (str.contains('speed too slow')) {
       return 'Connection speed too slow.';
     }
+    if (str.contains('virus') || str.contains('antivirus') || str.contains('quarantine')) {
+      return 'Quarantined by Antivirus: System security software detected a threat and removed this file. VirusDownloader did not fail.';
+    }
 
     return 'Download failed. Check connection or link.';
+  }
+
+  /// Generates a cryptographically strong random hexadecimal token
+  static String generateSecureToken([int byteLength = 32]) {
+    final random = Random.secure();
+    final values = List<int>.generate(byteLength, (i) => random.nextInt(256));
+    return values.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
+  }
+
+  /// Checks whether a filename or URL has an executable, script, or high-risk extension
+  static bool isSuspiciousFormat(String fileNameOrUrl) {
+    if (fileNameOrUrl.trim().isEmpty) return false;
+    final clean = fileNameOrUrl.split('?')[0].split('#')[0].toLowerCase().trim();
+    final ext = clean.contains('.') ? '.${clean.split('.').last}' : '';
+    if (ext.isEmpty) return false;
+
+    const suspiciousExtensions = {
+      '.exe',
+      '.msi',
+      '.bat',
+      '.cmd',
+      '.scr',
+      '.pif',
+      '.com',
+      '.vbs',
+      '.vbe',
+      '.js',
+      '.jse',
+      '.wsf',
+      '.wsh',
+      '.ps1',
+      '.ps1xml',
+      '.ps2',
+      '.psc1',
+      '.reg',
+      '.hta',
+      '.cpl',
+      '.jar',
+      '.iso',
+      '.img',
+      '.vhd',
+      '.vhdx',
+      '.dll',
+      '.sys',
+      '.apk',
+      '.appx',
+      '.msix',
+      '.dmg',
+      '.pkg',
+      '.deb',
+      '.rpm',
+      '.run',
+    };
+
+    return suspiciousExtensions.contains(ext);
   }
 }
 

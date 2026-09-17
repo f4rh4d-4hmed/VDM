@@ -192,7 +192,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           }, (res) => {
             sendBtn.disabled = false;
             if (res && res.success) {
-              sendBtn.querySelector('span').innerText = '✓ Queued!';
+              sendBtn.querySelector('span').innerText = 'Queued!';
               setTimeout(() => {
                 sendBtn.querySelector('span').innerText = origText;
               }, 2500);

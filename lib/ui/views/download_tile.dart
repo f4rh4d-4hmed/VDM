@@ -882,6 +882,13 @@ class _DownloadTileState extends State<DownloadTile> {
 
   String _buildStatusSubline() {
     final task = widget.task;
+    final isQuarantined = task.isQuarantinedByAntivirus ||
+        (task.errorMessage != null && task.errorMessage!.toLowerCase().contains('antivirus'));
+
+    if (isQuarantined) {
+      return 'Blocked by Antivirus (Quarantined)';
+    }
+
     switch (task.status) {
       case DownloadStatus.downloading:
         return task.formattedSpeed;
