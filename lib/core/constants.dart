@@ -25,7 +25,6 @@ class AppConstants {
 
   // Integration & Protocol Constants
   static const String protocolScheme = 'virusdownloader';
-  static const String extensionTokenHeader = 'x-virusdownloader-token';
   static const int defaultServerPort = 9849;
 }
 

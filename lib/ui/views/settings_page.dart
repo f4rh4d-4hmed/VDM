@@ -416,50 +416,6 @@ class _SettingsPageState extends State<SettingsPage> {
                           settingsVm.updateConfirmDownloads(val);
                         },
                       ),
-                      const Divider(height: 1),
-
-                      // Security Token
-                      ListTile(
-                        dense: true,
-                        leading: const Icon(Icons.shield_outlined, size: 20),
-                        title: const Text('Security Token'),
-                        subtitle: Text(
-                          settingsVm.settings.extensionAuthToken.isNotEmpty
-                              ? '${settingsVm.settings.extensionAuthToken.substring(0, 8)}...${settingsVm.settings.extensionAuthToken.substring(settingsVm.settings.extensionAuthToken.length - 8)}'
-                              : 'Auto-generating...',
-                          style: const TextStyle(fontFamily: 'monospace'),
-                        ),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              icon: const Icon(Icons.copy_rounded, size: 18),
-                              tooltip: 'Copy Security Token',
-                              onPressed: () async {
-                                final token = settingsVm.settings.extensionAuthToken;
-                                await Clipboard.setData(ClipboardData(text: token));
-                                if (context.mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('Security token copied to clipboard.')),
-                                  );
-                                }
-                              },
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.refresh_rounded, size: 18),
-                              tooltip: 'Regenerate Token',
-                              onPressed: () async {
-                                final newToken = await settingsVm.regenerateExtensionAuthToken();
-                                if (context.mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('New security token generated and synced.')),
-                                  );
-                                }
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
 
                       // Detected Browsers
                       if (settingsVm.isDetectingBrowsers)

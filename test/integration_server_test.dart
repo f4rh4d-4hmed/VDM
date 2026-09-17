@@ -21,7 +21,6 @@ void main() {
   late DownloadRepository downloadRepo;
   late IntegrationServerService server;
   late HttpClient httpClient;
-  const testToken = 'test_secret_token_1234567890abcdef';
 
   setUp(() async {
     HttpOverrides.global = null;
@@ -34,7 +33,6 @@ void main() {
     await settingsRepo.init();
     await settingsRepo.updateSettings(
       settingsRepo.currentSettings.copyWith(
-        extensionAuthToken: testToken,
         confirmDownloads: false, // Default to false in tests to test queueing directly
       ),
     );
@@ -82,7 +80,6 @@ void main() {
     final request = await httpClient.postUrl(Uri.parse('http://127.0.0.1:9890/add'));
     request.headers.set('Origin', 'https://malicious-website.com');
     request.headers.contentType = ContentType.json;
-    request.headers.set(AppConstants.extensionTokenHeader, testToken);
 
     request.write(jsonEncode({
       'url': 'https://example.com/malware.exe',
@@ -97,33 +94,26 @@ void main() {
     expect(json['error'], contains('Web page origins are blocked'));
   });
 
-  test('Integration server rejects requests missing or with invalid auth token', () async {
   test('Integration server rejects invalid or non-HTTP URL with 400', () async {
     final request = await httpClient.postUrl(Uri.parse('http://127.0.0.1:9890/add'));
     request.headers.contentType = ContentType.json;
-    // No token provided
 
     request.write(jsonEncode({
-      'url': 'https://example.com/file.zip',
       'url': 'not_a_valid_url',
       'fileName': 'file.zip',
     }));
 
     final response = await request.close();
-    expect(response.statusCode, HttpStatus.unauthorized);
     expect(response.statusCode, HttpStatus.badRequest);
 
     final body = await response.transform(utf8.decoder).join();
     final json = jsonDecode(body) as Map<String, dynamic>;
-    expect(json['error'], contains('Unauthorized: Invalid or missing security token'));
     expect(json['error'], contains('Invalid URL'));
   });
 
-  test('Integration server handles POST /add with valid token and queues task', () async {
   test('Integration server handles POST /add and queues task', () async {
     final request = await httpClient.postUrl(Uri.parse('http://127.0.0.1:9890/add'));
     request.headers.contentType = ContentType.json;
-    request.headers.set(AppConstants.extensionTokenHeader, testToken);
 
     final payload = {
       'url': 'https://example.com/stream/video.m3u8',
@@ -164,7 +154,6 @@ void main() {
 
     final request = await httpClient.postUrl(Uri.parse('http://127.0.0.1:9890/add'));
     request.headers.contentType = ContentType.json;
-    request.headers.set(AppConstants.extensionTokenHeader, testToken);
 
     final payload = {
       'url': 'https://example.com/app.exe',
@@ -211,7 +200,6 @@ void main() {
   test('Integration server rejects blob URLs with 400 and clear error message', () async {
     final request = await httpClient.postUrl(Uri.parse('http://127.0.0.1:9890/add'));
     request.headers.contentType = ContentType.json;
-    request.headers.set(AppConstants.extensionTokenHeader, testToken);
 
     final payload = {
       'url': 'blob:https://example.com/123-456',

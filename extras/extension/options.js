@@ -4,7 +4,6 @@
 
 document.addEventListener('DOMContentLoaded', () => {
   const serverUrlInput = document.getElementById('serverUrl');
-  const authTokenInput = document.getElementById('authToken');
   const interceptDownloadsInput = document.getElementById('interceptDownloads');
   const showFloatingButtonInput = document.getElementById('showFloatingButton');
   const minVideoSizeInput = document.getElementById('minVideoSize');
@@ -18,9 +17,6 @@ document.addEventListener('DOMContentLoaded', () => {
   chrome.runtime.sendMessage({ type: 'GET_CONFIG' }, (config) => {
     if (config) {
       serverUrlInput.value = config.serverUrl || 'http://127.0.0.1:9849';
-      if (authTokenInput) {
-        authTokenInput.value = config.authToken || '';
-      }
       interceptDownloadsInput.checked = config.interceptDownloads !== false;
       showFloatingButtonInput.checked = config.showFloatingButton !== false;
       minVideoSizeInput.value = Math.round((config.minVideoSizeBytes || 0) / 1024);
@@ -34,29 +30,17 @@ document.addEventListener('DOMContentLoaded', () => {
     testResult.innerText = 'Testing...';
 
     const url = `${serverUrlInput.value.trim().replace(/\/$/, '')}/health`;
-    const token = authTokenInput ? authTokenInput.value.trim() : '';
 
     try {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 2500);
 
-      const headers = {};
-      if (token) {
-        headers['x-virusdownloader-token'] = token;
-      }
-
-      const res = await fetch(url, { headers, signal: controller.signal });
       const res = await fetch(url, { signal: controller.signal });
       clearTimeout(timeout);
 
       if (res.ok) {
         const data = await res.json();
         testResult.className = 'status-msg status-success';
-        const authNotice = data.authenticated ? ' (Authenticated)' : '';
-        testResult.innerText = `Connected to ${data.app || 'VirusDownloader'} v${data.version || '1.0'}${authNotice}`;
-      } else if (res.status === 401) {
-        testResult.className = 'status-msg status-error';
-        testResult.innerText = 'Authentication failed: Invalid Security Token.';
         testResult.innerText = `Connected to ${data.app || 'VirusDownloader'} v${data.version || '1.0'}`;
       } else {
         testResult.className = 'status-msg status-error';
@@ -81,7 +65,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const updatedConfig = {
       serverUrl: serverUrlInput.value.trim() || 'http://127.0.0.1:9849',
-      authToken: authTokenInput ? authTokenInput.value.trim() : '',
       interceptDownloads: interceptDownloadsInput.checked,
       showFloatingButton: showFloatingButtonInput.checked,
       minVideoSizeBytes: minSizeKB * 1024,

@@ -9,7 +9,6 @@ class ConfirmationWindowApp extends StatefulWidget {
   final String url;
   final String fileName;
   final String? category;
-  final String? token;
   final Map<String, String>? headers;
   final int port;
 
@@ -18,7 +17,6 @@ class ConfirmationWindowApp extends StatefulWidget {
     required this.url,
     required this.fileName,
     this.category,
-    this.token,
     this.headers,
     this.port = AppConstants.defaultServerPort,
   });
@@ -36,9 +34,6 @@ class _ConfirmationWindowAppState extends State<ConfirmationWindowApp> {
     try {
       final request = await client.post('127.0.0.1', widget.port, '/add').timeout(const Duration(seconds: 4));
       request.headers.contentType = ContentType.json;
-      if (widget.token != null && widget.token!.isNotEmpty) {
-        request.headers.set(AppConstants.extensionTokenHeader, widget.token!);
-      }
 
       final payload = {
         'url': widget.url,

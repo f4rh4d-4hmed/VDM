@@ -31,15 +31,11 @@ Future<bool> _forwardToRunningServer({
   required String url,
   required String fileName,
   required String category,
-  required String token,
 }) async {
   final client = HttpClient();
   try {
     final req = await client.post('127.0.0.1', port, '/add').timeout(const Duration(seconds: 2));
     req.headers.contentType = ContentType.json;
-    if (token.isNotEmpty) {
-      req.headers.set(AppConstants.extensionTokenHeader, token);
-    }
     req.write(jsonEncode({
       'url': url,
       'fileName': fileName,
@@ -63,14 +59,12 @@ void main([List<String> args = const []]) async {
     String url = '';
     String fileName = '';
     String category = 'other';
-    String token = '';
     Map<String, String>? headers;
 
     for (final arg in args) {
       if (arg.startsWith('--url=')) url = arg.substring(6);
       if (arg.startsWith('--filename=')) fileName = arg.substring(11);
       if (arg.startsWith('--category=')) category = arg.substring(11);
-      if (arg.startsWith('--token=')) token = arg.substring(8);
       if (arg.startsWith('--headers=')) {
         try {
           final decoded = jsonDecode(arg.substring(10));
@@ -105,7 +99,6 @@ void main([List<String> args = const []]) async {
       url: url,
       fileName: fileName,
       category: category,
-      token: token,
       headers: headers,
     ));
     return;
@@ -124,7 +117,6 @@ void main([List<String> args = const []]) async {
       final url = parsed.queryParameters['url'] ?? '';
       final fileName = parsed.queryParameters['fileName'] ?? parsed.queryParameters['filename'] ?? '';
       final category = parsed.queryParameters['category'] ?? 'other';
-      final token = parsed.queryParameters['token'] ?? '';
 
       // If an existing instance is running on loopback, forward and exit
       final forwarded = await _forwardToRunningServer(
@@ -132,7 +124,6 @@ void main([List<String> args = const []]) async {
         url: url,
         fileName: fileName,
         category: category,
-        token: token,
       );
 
       if (forwarded) {
@@ -143,7 +134,6 @@ void main([List<String> args = const []]) async {
         'url': url,
         'fileName': fileName,
         'category': category,
-        'token': token,
       };
     } catch (e) {
       debugPrint('Error parsing protocol URI argument: $e');
@@ -219,11 +209,6 @@ void main([List<String> args = const []]) async {
   );
   if (!AppUtils.isMobile) {
     await integrationServer.start();
-    // Auto-sync token and server port to extension directory
-    await browserIntegrationService.syncExtensionSecurityConfig(
-      token: settingsRepository.currentSettings.extensionAuthToken,
-      port: integrationServer.serverPort,
-    );
   }
 
   // Handle pending protocol task on cold start
@@ -245,7 +230,6 @@ void main([List<String> args = const []]) async {
             '--url=$taskUrl',
             '--filename=$taskFile',
             '--category=${pendingProtocolTask['category'] ?? 'other'}',
-            '--token=${settingsRepository.currentSettings.extensionAuthToken}',
           ],
           mode: ProcessStartMode.detached,
         );

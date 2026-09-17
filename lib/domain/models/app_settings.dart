@@ -15,7 +15,6 @@ class AppSettings {
   final bool runInBackground;
   final bool autoStartOnBoot;
   final bool confirmDownloads;
-  final String extensionAuthToken;
 
   const AppSettings({
     this.defaultSavePath = '',
@@ -30,7 +29,6 @@ class AppSettings {
     this.runInBackground = false,
     this.autoStartOnBoot = false,
     this.confirmDownloads = true,
-    this.extensionAuthToken = '',
   });
 
   AppSettings copyWith({
@@ -46,7 +44,6 @@ class AppSettings {
     bool? runInBackground,
     bool? autoStartOnBoot,
     bool? confirmDownloads,
-    String? extensionAuthToken,
   }) {
     return AppSettings(
       defaultSavePath: defaultSavePath ?? this.defaultSavePath,
@@ -61,7 +58,6 @@ class AppSettings {
       runInBackground: runInBackground ?? this.runInBackground,
       autoStartOnBoot: autoStartOnBoot ?? this.autoStartOnBoot,
       confirmDownloads: confirmDownloads ?? this.confirmDownloads,
-      extensionAuthToken: extensionAuthToken ?? this.extensionAuthToken,
     );
   }
 }

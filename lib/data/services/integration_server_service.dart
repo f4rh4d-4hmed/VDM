@@ -99,30 +99,6 @@ class IntegrationServerService extends ChangeNotifier {
     return false;
   }
 
-  String? _extractToken(HttpRequest request) {
-    // 1. Check custom header x-virusdownloader-token or x-vd-token
-    final headerVal = request.headers.value(AppConstants.extensionTokenHeader) ??
-        request.headers.value('x-vd-token');
-    if (headerVal != null && headerVal.trim().isNotEmpty) {
-      return headerVal.trim();
-    }
-
-    // 2. Check Authorization: Bearer <token>
-    final auth = request.headers.value('authorization');
-    if (auth != null && auth.startsWith('Bearer ')) {
-      final token = auth.substring(7).trim();
-      if (token.isNotEmpty) return token;
-    }
-
-    // 3. Check query param ?token=
-    final queryToken = request.uri.queryParameters['token'];
-    if (queryToken != null && queryToken.trim().isNotEmpty) {
-      return queryToken.trim();
-    }
-
-    return null;
-  }
-
   bool _isRateLimited() {
     final now = DateTime.now();
     _recentRequestTimes.removeWhere((t) => now.difference(t) > _rateLimitWindow);
@@ -152,7 +128,6 @@ class IntegrationServerService extends ChangeNotifier {
     if (origin.isNotEmpty && _isAllowedExtensionOrigin(origin)) {
       request.response.headers.set('Access-Control-Allow-Origin', origin);
       request.response.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-      request.response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-virusdownloader-token, x-vd-token');
       request.response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     }
 
@@ -188,31 +163,15 @@ class IntegrationServerService extends ChangeNotifier {
     notifyListeners();
 
     final path = request.uri.path;
-    final expectedToken = downloadRepository.settingsRepo.currentSettings.extensionAuthToken;
-    final incomingToken = _extractToken(request);
 
     // 5. Health endpoint
     if (request.method == 'GET' && (path == '/health' || path == '/status')) {
-      final isAuthenticated = expectedToken.isEmpty || (incomingToken != null && incomingToken == expectedToken);
-
-      // If token provided but mismatch, reject
-      if (incomingToken != null && incomingToken != expectedToken) {
-        request.response.statusCode = HttpStatus.unauthorized;
-        request.response.headers.contentType = ContentType.json;
-        request.response.write(jsonEncode({
-          'error': 'Unauthorized: Invalid extension security token.',
-        }));
-        await request.response.close();
-        return;
-      }
-
       request.response.headers.contentType = ContentType.json;
       request.response.statusCode = HttpStatus.ok;
       request.response.write(jsonEncode({
         'status': 'ok',
         'app': 'VirusDownloader',
         'version': '1.0.0',
-        'authenticated': isAuthenticated,
         'port': _server?.port ?? port,
         'uptime': DateTime.now().toIso8601String(),
       }));
@@ -222,16 +181,6 @@ class IntegrationServerService extends ChangeNotifier {
 
     // 6. Add Download Task
     if (request.method == 'POST' && path == '/add') {
-      // Validate security token
-      if (expectedToken.isNotEmpty && (incomingToken == null || incomingToken != expectedToken)) {
-        request.response.statusCode = HttpStatus.unauthorized;
-        request.response.headers.contentType = ContentType.json;
-        request.response.write(jsonEncode({
-          'error': 'Unauthorized: Invalid or missing security token.',
-        }));
-        await request.response.close();
-        return;
-      }
 
       try {
         final content = await utf8.decoder.bind(request).join();
@@ -338,7 +287,6 @@ class IntegrationServerService extends ChangeNotifier {
               '--url=$url',
               '--filename=$fileName',
               '--category=${category.name}',
-              '--token=$expectedToken',
             ];
             if (headers != null && headers.isNotEmpty) {
               processArgs.add('--headers=${jsonEncode(headers)}');

@@ -8,7 +8,6 @@ const DEFAULT_SERVER_URL = 'http://127.0.0.1:9849';
 
 const DEFAULT_CONFIG = {
   serverUrl: DEFAULT_SERVER_URL,
-  authToken: '',
   interceptDownloads: true,
   showFloatingButton: true,
   minVideoSizeBytes: 200 * 1024, // 200 KB
@@ -27,26 +26,6 @@ const interceptedDownloadIds = new Set();
 // Load configuration
 async function getConfig() {
   const data = await chrome.storage.local.get('virusDownloaderConfig');
-  let config = { ...DEFAULT_CONFIG, ...(data.virusDownloaderConfig || {}) };
-
-  // Auto-sync token from security.json if not yet populated
-  if (!config.authToken) {
-    try {
-      const res = await fetch(chrome.runtime.getURL('security.json'));
-      if (res.ok) {
-        const sec = await res.json();
-        if (sec.authToken) {
-          config.authToken = sec.authToken;
-          if (sec.serverPort) {
-            config.serverUrl = `http://127.0.0.1:${sec.serverPort}`;
-          }
-          await chrome.storage.local.set({ virusDownloaderConfig: config });
-        }
-      }
-    } catch (_) {}
-  }
-
-  return config;
   return { ...DEFAULT_CONFIG, ...(data.virusDownloaderConfig || {}) };
 }
 
@@ -464,16 +443,8 @@ async function sendToDesktopApp(payload) {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 6000);
 
-    const reqHeaders = {
-      'Content-Type': 'application/json'
-    };
-    if (config.authToken) {
-      reqHeaders['x-virusdownloader-token'] = config.authToken;
-    }
-
     const res = await fetch(targetUrl, {
       method: 'POST',
-      headers: reqHeaders,
       headers: {
         'Content-Type': 'application/json'
       },
@@ -506,20 +477,13 @@ async function checkDesktopAppHealth() {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 2000);
 
-    const reqHeaders = {};
-    if (config.authToken) {
-      reqHeaders['x-virusdownloader-token'] = config.authToken;
-    }
-
     const res = await fetch(targetUrl, {
-      headers: reqHeaders,
       signal: controller.signal
     });
     clearTimeout(timeout);
 
     if (res.ok) {
       const data = await res.json();
-      return { connected: true, app: data.app || 'VirusDownloader', version: data.version, authenticated: data.authenticated };
       return { connected: true, app: data.app || 'VirusDownloader', version: data.version };
     }
     return { connected: false, error: `HTTP ${res.status}` };
