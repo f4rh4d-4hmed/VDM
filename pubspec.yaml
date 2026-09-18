@@ -49,4 +49,5 @@ flutter:
   assets:
     - extras/extension/
     - extras/extension/icons/
+    - assets/icons/browsers/
 

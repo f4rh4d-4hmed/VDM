@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -6,6 +7,7 @@ import 'package:provider/provider.dart';
 import '../../core/constants.dart';
 import '../../core/enums.dart';
 import '../../core/utils.dart';
+import '../../data/services/browser_integration_service.dart';
 import '../../data/services/permission_service.dart';
 import '../view_models/settings_view_model.dart';
 import '../widgets/app_animated_dropdown.dart';
@@ -434,33 +436,8 @@ class _SettingsPageState extends State<SettingsPage> {
                             final browser = settingsVm.detectedBrowsers[index];
                             return ListTile(
                               dense: true,
-                              leading: Icon(
-                                _getBrowserIcon(browser.name),
-                                color: theme.colorScheme.primary,
-                                size: 22,
-                              ),
+                              leading: _buildBrowserIcon(browser),
                               title: Text(browser.name, style: const TextStyle(fontWeight: FontWeight.w500)),
-                              trailing: FilledButton.tonal(
-                                style: FilledButton.styleFrom(
-                                  visualDensity: VisualDensity.compact,
-                                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                                ),
-                                onPressed: () async {
-                                  final success = await settingsVm.launchBrowser(browser);
-                                  if (context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          success
-                                              ? '${browser.name} launched with extension!'
-                                              : 'Failed to launch ${browser.name}.',
-                                        ),
-                                      ),
-                                    );
-                                  }
-                                },
-                                child: const Text('Launch'),
-                              ),
                             );
                           },
                         ),
@@ -543,14 +520,68 @@ class _SettingsPageState extends State<SettingsPage> {
 );
 }
 
-  IconData _getBrowserIcon(String name) {
+  Widget _buildBrowserIcon(DetectedBrowser browser) {
+    // 1. If an actual OS icon was extracted or located on disk, display it
+    if (browser.iconPath != null && browser.iconPath!.isNotEmpty) {
+      final file = File(browser.iconPath!);
+      if (file.existsSync()) {
+        return Image.file(
+          file,
+          width: 24,
+          height: 24,
+          fit: BoxFit.contain,
+          errorBuilder: (_, __, ___) => _buildFallbackAssetIcon(browser.name),
+        );
+      }
+    }
+
+    // 2. Fall back to bundled high-resolution brand asset
+    return _buildFallbackAssetIcon(browser.name);
+  }
+
+  Widget _buildFallbackAssetIcon(String name) {
     final lower = name.toLowerCase();
-    if (lower.contains('chrome')) return Icons.circle_outlined;
-    if (lower.contains('edge')) return Icons.language_rounded;
-    if (lower.contains('brave')) return Icons.shield_outlined;
-    if (lower.contains('opera')) return Icons.radio_button_checked;
-    if (lower.contains('firefox')) return Icons.local_fire_department_outlined;
-    return Icons.public;
+    String? assetFile;
+
+    if (lower.contains('opera gx') || (lower.contains('opera') && lower.contains('gx'))) {
+      assetFile = 'opera_gx.png';
+    } else if (lower.contains('opera')) {
+      assetFile = 'opera.png';
+    } else if (lower.contains('chrome')) {
+      assetFile = 'chrome.png';
+    } else if (lower.contains('edge')) {
+      assetFile = 'edge.png';
+    } else if (lower.contains('brave')) {
+      assetFile = 'brave.png';
+    } else if (lower.contains('vivaldi')) {
+      assetFile = 'vivaldi.png';
+    } else if (lower.contains('firefox')) {
+      assetFile = 'firefox.png';
+    } else if (lower.contains('chromium')) {
+      assetFile = 'chromium.png';
+    } else if (lower.contains('tor')) {
+      assetFile = 'tor.png';
+    } else if (lower.contains('safari')) {
+      assetFile = 'safari.png';
+    }
+
+    if (assetFile != null) {
+      return Image.asset(
+        'assets/icons/browsers/$assetFile',
+        width: 24,
+        height: 24,
+        fit: BoxFit.contain,
+        errorBuilder: (_, __, ___) => const Icon(
+          Icons.public_rounded,
+          size: 24,
+        ),
+      );
+    }
+
+    return const Icon(
+      Icons.public_rounded,
+      size: 24,
+    );
   }
 
   void _showExtensionGuideDialog(BuildContext context, SettingsViewModel settingsVm) {
@@ -578,7 +609,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 const SizedBox(height: 14),
                 _buildGuideStep(
                   step: '1',
-                  title: 'Copy the extension path or click "Auto-Add & Launch"',
+                  title: 'Copy the extension path',
                   desc: 'The extension directory has been extracted from the app assets.',
                 ),
                 _buildGuideStep(
