@@ -91,6 +91,58 @@ void main() {
       expect(pool.acquireNext(), isNull);
     });
 
+    test('DynamicProxyPool getBestActiveProxy cycles round-robin among healthy proxies', () {
+      final p1 = ProxyConfig.tryParse('http://10.0.0.1:8080')!;
+      final p2 = ProxyConfig.tryParse('http://10.0.0.2:8080')!;
+
+      final pool = DynamicProxyPool([p1, p2]);
+      pool.markSlowOrDead(p1);
+
+      // Only p2 is healthy
+      expect(pool.getBestActiveProxy()?.host, '10.0.0.2');
+      expect(pool.getBestActiveProxy()?.host, '10.0.0.2');
+      expect(pool.hasAlternativeProxy(p2), isFalse);
+    });
+
+    test('Dynamic work stealing splits segment without losing or duplicating bytes', () {
+      // Worker downloading a 10MB chunk (0 to 10,485,759)
+      const totalBytes = 10 * 1024 * 1024;
+      final worker = SegmentWorkerState(
+        index: 0,
+        startByte: 0,
+        endByte: totalBytes - 1,
+        downloadedBytes: 2 * 1024 * 1024, // 2MB downloaded, 8MB remaining
+      );
+
+      final originalTotal = worker.totalSegmentBytes;
+      final originalRemaining = worker.endByte - worker.currentOffset + 1;
+      expect(originalRemaining, 8 * 1024 * 1024);
+
+      // Simulate work stealing by an idle worker
+      final half = (originalRemaining / 2).floor();
+      final oldEnd = worker.endByte;
+      final splitPoint = oldEnd - half;
+
+      worker.endByte = splitPoint;
+
+      final stolen = SegmentWorkerState(
+        index: 1,
+        startByte: splitPoint + 1,
+        endByte: oldEnd,
+        downloadedBytes: 0,
+      );
+
+      // Verify no gaps and no overlaps
+      expect(worker.endByte + 1, stolen.startByte);
+      expect(stolen.endByte, totalBytes - 1);
+      expect(worker.startByte, 0);
+
+      // Verify exact byte conservation (no lost or double-counted bytes)
+      expect(worker.totalSegmentBytes + stolen.totalSegmentBytes, originalTotal);
+      expect(stolen.totalSegmentBytes, half);
+      expect(worker.totalSegmentBytes - worker.downloadedBytes, originalRemaining - half);
+    });
+
     test('Placeholder file mode is enabled by default and threshold is 3GB', () {
       const defaultSettings = AppSettings();
       expect(defaultSettings.usePlaceholderMode, isTrue);
@@ -118,4 +170,5 @@ void main() {
     });
   });
 }
+
 
