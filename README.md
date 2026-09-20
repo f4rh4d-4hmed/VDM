@@ -38,6 +38,18 @@ Beyond standard file downloading capabilities, VirusDownloader includes several 
 
 ---
 
+### What makes this downloader unique?
+
+Most download managers support segmented downloading (using HTTP Range requests) over a single connection. However, file hosts and CDNs frequently throttle bandwidth on a per-IP or per-connection basis. 
+
+This downloader introduces **multi-threaded proxy downloading**:
+1. **Dynamic Chunk Allocation:** The target file is calculated into fixed byte ranges (for example, splitting a 100 MB file into 8 MB segments).
+2. **Distributed Routing:** Each chunk is downloaded concurrently through a distinct proxy IP.
+3. **Bypassing Server Throttling:** By presenting each request as an independent client to the destination server, you effectively bypass remote per-IP rate limits and fully saturate your available bandwidth.
+   
+  *But you need proxy of your own.* *And if it works or not is completely on the server and ISP and your proxy. But if this works, you can expect 1.2x to 5x speed jump*
+
+---
 ## Build Requirements
 
 | Component | Requirement | Details |
