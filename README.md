@@ -1,6 +1,6 @@
 <div align="center">
 
-# VirusDownloader
+# VirusDownloadManager
 
 **A high-performance, cross-platform download manager built with Flutter.**
 
