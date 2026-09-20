@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:virusdownloader/core/enums.dart';
-import 'package:virusdownloader/data/services/segmented_download_service.dart';
-import 'package:virusdownloader/domain/models/app_settings.dart';
-import 'package:virusdownloader/domain/models/proxy_config.dart';
+import 'package:virus_download_manager/core/enums.dart';
+import 'package:virus_download_manager/data/services/segmented_download_service.dart';
+import 'package:virus_download_manager/domain/models/app_settings.dart';
+import 'package:virus_download_manager/domain/models/proxy_config.dart';
 
 void main() {
   group('Segmented Download & Worker State Tests', () {

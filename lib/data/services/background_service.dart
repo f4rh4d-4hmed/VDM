@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 class BackgroundService {
-  static const _channel = MethodChannel('com.virusdownloader/background_service');
+  static const _channel = MethodChannel('com.virusdownloadmanager.vdm/background_service');
 
   bool _isRunning = false;
   bool get isRunning => _isRunning;

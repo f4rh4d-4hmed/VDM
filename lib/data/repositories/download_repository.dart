@@ -603,13 +603,13 @@ class DownloadRepository extends ChangeNotifier {
         task.fileName.toLowerCase().endsWith('.m3u8') ||
         (task.savePath.toLowerCase().endsWith('.mkv') && task.url.toLowerCase().contains('.m3u8'));
 
-    final tempFilePath = await fileService.getTaskTempFilePath(taskId, task.fileName);
+    final metaFilePath = await fileService.getTaskMetaFilePath(taskId, task.fileName);
 
     try {
       if (isStream && ffmpegService != null) {
         await ffmpegService!.downloadHlsStream(
           m3u8Url: task.url,
-          savePath: tempFilePath,
+          savePath: task.savePath,
           taskId: taskId,
           cancelToken: cancelToken,
           headers: task.headers,
@@ -638,11 +638,7 @@ class DownloadRepository extends ChangeNotifier {
           },
         );
         if (!cancelToken.isCancelled) {
-          final moved = await fileService.moveFile(tempFilePath, task.savePath);
-          if (!moved) {
-            throw FileSystemException('Failed to move completed file to destination', task.savePath);
-          }
-          await fileService.deleteFile('$tempFilePath.vdown_meta');
+          await fileService.deleteFile(metaFilePath);
         }
       } else if (segmentedService != null &&
           (settings.defaultWorkerCount > 1 ||
@@ -651,7 +647,7 @@ class DownloadRepository extends ChangeNotifier {
         await segmentedService!.downloadFileSegmented(
           url: task.url,
           savePath: task.savePath,
-          tempPath: tempFilePath,
+          metaPath: metaFilePath,
           workerCount: settings.defaultWorkerCount,
           cancelToken: cancelToken,
           usePlaceholderMode: settings.usePlaceholderMode,
@@ -694,12 +690,9 @@ class DownloadRepository extends ChangeNotifier {
           },
         );
       } else {
-        if (!await fileService.fileExists(tempFilePath) && await fileService.fileExists(task.savePath)) {
-          await fileService.moveFile(task.savePath, tempFilePath);
-        }
         await httpService.downloadFile(
           url: task.url,
-          savePath: tempFilePath,
+          savePath: task.savePath,
           cancelToken: cancelToken,
           headers: task.headers,
           onResumableChecked: ({required bool isResumable}) {
@@ -734,12 +727,6 @@ class DownloadRepository extends ChangeNotifier {
             );
           },
         );
-        if (!cancelToken.isCancelled) {
-          final moved = await fileService.moveFile(tempFilePath, task.savePath);
-          if (!moved) {
-            throw FileSystemException('Failed to move completed file to destination', task.savePath);
-          }
-        }
       }
 
       // Successfully completed

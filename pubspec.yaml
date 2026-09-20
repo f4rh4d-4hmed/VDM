@@ -1,4 +1,4 @@
-name: virusdownloader
+name: virus_download_manager
 description: "A modern cross-platform download manager."
 publish_to: 'none'
 version: 1.0.0+1
@@ -24,8 +24,9 @@ dependencies:
   # File Picker
   file_picker: ^8.1.4
 
-  # Desktop Window
+  # Desktop Window & Taskbar
   window_manager: ^0.4.3
+  windows_taskbar: ^1.1.2
 
   # Package & version information
   package_info_plus: ^8.2.0

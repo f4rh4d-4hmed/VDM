@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:virusdownloader/ui/views/rename_dialog.dart';
+import 'package:virus_download_manager/ui/views/rename_dialog.dart';
 
 void main() {
   testWidgets('RenameDialog validates input and returns full filename with extension', (tester) async {

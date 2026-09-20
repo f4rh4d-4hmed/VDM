@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:virusdownloader/core/enums.dart';
-import 'package:virusdownloader/core/utils.dart';
-import 'package:virusdownloader/domain/models/download_task.dart';
+import 'package:virus_download_manager/core/enums.dart';
+import 'package:virus_download_manager/core/utils.dart';
+import 'package:virus_download_manager/domain/models/download_task.dart';
 
 void main() {
   group('AppUtils.extractExtension', () {

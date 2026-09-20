@@ -3,8 +3,8 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
-import 'package:virusdownloader/data/services/ffmpeg_service.dart';
-import 'package:virusdownloader/data/services/hls_download_service.dart';
+import 'package:virus_download_manager/data/services/ffmpeg_service.dart';
+import 'package:virus_download_manager/data/services/hls_download_service.dart';
 
 class MockFfmpegService extends FfmpegService {
   String? lastConcatListPath;

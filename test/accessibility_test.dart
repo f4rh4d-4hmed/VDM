@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:virusdownloader/core/enums.dart';
-import 'package:virusdownloader/core/theme.dart';
-import 'package:virusdownloader/data/services/file_service.dart';
-import 'package:virusdownloader/data/services/http_download_service.dart';
-import 'package:virusdownloader/domain/models/download_task.dart';
-import 'package:virusdownloader/ui/views/change_download_link_dialog.dart';
-import 'package:virusdownloader/ui/views/download_tile.dart';
+import 'package:virus_download_manager/core/enums.dart';
+import 'package:virus_download_manager/core/theme.dart';
+import 'package:virus_download_manager/data/services/file_service.dart';
+import 'package:virus_download_manager/data/services/http_download_service.dart';
+import 'package:virus_download_manager/domain/models/download_task.dart';
+import 'package:virus_download_manager/ui/views/change_download_link_dialog.dart';
+import 'package:virus_download_manager/ui/views/download_tile.dart';
 
 Widget createTileWrapper({
   required DownloadTask task,

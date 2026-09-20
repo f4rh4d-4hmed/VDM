@@ -3,7 +3,7 @@ import 'dart:math' as math;
 
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:virusdownloader/data/services/adaptive_rate_limiter.dart';
+import 'package:virus_download_manager/data/services/adaptive_rate_limiter.dart';
 
 void main() {
   group('AdaptiveRateLimiter - Retry-After Parsing', () {

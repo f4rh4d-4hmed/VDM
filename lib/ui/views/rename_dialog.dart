@@ -6,10 +6,10 @@ class RenameDialog extends StatefulWidget {
   final ValueChanged<String> onConfirm;
 
   const RenameDialog({
-    Key? key,
+    super.key,
     required this.fileName,
     required this.onConfirm,
-  }) : super(key: key);
+  });
 
   static Future<void> show(
     BuildContext context,

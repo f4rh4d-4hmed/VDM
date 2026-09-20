@@ -9,7 +9,7 @@ class FileService {
   Directory? _customBaseTempDir;
 
   /// MethodChannel for native Android file operations
-  static const _fileChannel = MethodChannel('com.virusdownloader/file_open');
+  static const _fileChannel = MethodChannel('com.virusdownloadmanager.vdm/file_open');
 
   FileService({Directory? customBaseTempDir}) : _customBaseTempDir = customBaseTempDir;
 
@@ -299,6 +299,14 @@ class FileService {
     return p.join(tempDir.path, '${taskId}_$safeName');
   }
 
+  /// Returns the metadata (.vdown_meta) file path for an in-progress download task.
+  /// Kept in the shared app temp directory (AppData Roaming on Windows).
+  Future<String> getTaskMetaFilePath(String taskId, String fileName) async {
+    final tempDir = await getAppTempDirectory();
+    final safeName = p.basename(fileName);
+    return p.join(tempDir.path, '${taskId}_$safeName.vdown_meta');
+  }
+
   /// Cleans up temporary download file and metadata for a specific task.
   /// Strictly deletes only the task's individual files (never the shared temp folder)
   /// so other active downloads remain completely unaffected.
@@ -313,6 +321,11 @@ class FileService {
       final tempFilePath = await getTaskTempFilePath(taskId, fileName);
       await deleteFile(tempFilePath);
       await deleteFile('$tempFilePath.vdown_meta');
+    } catch (_) {}
+
+    try {
+      final metaFilePath = await getTaskMetaFilePath(taskId, fileName);
+      await deleteFile(metaFilePath);
     } catch (_) {}
 
     if (deleteTargetFile && savePath != null && savePath.isNotEmpty) {

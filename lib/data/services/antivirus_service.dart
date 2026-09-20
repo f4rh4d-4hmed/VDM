@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
-import '../../core/utils.dart';
 
 class AntivirusService {
   /// Attaches Windows Zone.Identifier (Mark of the Web) to downloaded files on Windows NTFS.

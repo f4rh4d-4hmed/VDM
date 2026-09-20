@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
-import 'package:virusdownloader/core/enums.dart';
-import 'package:virusdownloader/data/services/integrity_service.dart';
-import 'package:virusdownloader/domain/models/download_task.dart';
-import 'package:virusdownloader/ui/views/hash_dialog.dart';
+import 'package:virus_download_manager/core/enums.dart';
+import 'package:virus_download_manager/data/services/integrity_service.dart';
+import 'package:virus_download_manager/domain/models/download_task.dart';
+import 'package:virus_download_manager/ui/views/hash_dialog.dart';
 
 void main() {
   testWidgets('HashDialog initializes with Tap placeholder and does not auto-calculate', (tester) async {

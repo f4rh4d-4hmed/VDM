@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/constants.dart';
 import '../../core/enums.dart';
-import '../../core/utils.dart';
 import '../../domain/models/app_settings.dart';
 import '../../domain/models/download_task.dart';
 import '../../domain/models/proxy_config.dart';

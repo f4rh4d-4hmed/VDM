@@ -22,6 +22,7 @@ import 'data/services/permission_service.dart';
 import 'data/services/proxy_service.dart';
 import 'data/services/segmented_download_service.dart';
 import 'data/services/storage_service.dart';
+import 'data/services/taskbar_service.dart';
 import 'ui/view_models/downloads_view_model.dart';
 import 'ui/view_models/settings_view_model.dart';
 import 'ui/views/confirmation_window_app.dart';
@@ -144,9 +145,9 @@ void main([List<String> args = const []]) async {
   if (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
     try {
       await windowManager.ensureInitialized();
-      const windowOptions = WindowOptions(
-        size: Size(1080, 720),
-        minimumSize: Size(820, 560),
+      final windowOptions = WindowOptions(
+        size: const Size(1080, 720),
+        minimumSize: const Size(820, 560),
         center: true,
         title: AppConstants.appName,
       );
@@ -181,6 +182,7 @@ void main([List<String> args = const []]) async {
   );
 
   final backgroundService = BackgroundService();
+  final taskbarService = TaskbarService();
 
   final settingsRepository = SettingsRepository(storageService: storageService);
   await settingsRepository.init();
@@ -200,6 +202,12 @@ void main([List<String> args = const []]) async {
     integrityService: integrityService,
   );
   await downloadRepository.init();
+
+  // Wire Taskbar Progress updates on desktop
+  downloadRepository.addListener(() {
+    taskbarService.updateProgress(downloadRepository.tasks);
+  });
+  taskbarService.updateProgress(downloadRepository.tasks);
 
   // Initialize Browser Integration & Start Local Server
   final browserIntegrationService = BrowserIntegrationService();
@@ -258,6 +266,7 @@ void main([List<String> args = const []]) async {
         Provider<IntegrityService>.value(value: integrityService),
         Provider<SegmentedDownloadService>.value(value: segmentedService),
         Provider<BackgroundService>.value(value: backgroundService),
+        Provider<TaskbarService>.value(value: taskbarService),
         Provider<BrowserIntegrationService>.value(value: browserIntegrationService),
         ChangeNotifierProvider<IntegrationServerService>.value(value: integrationServer),
 

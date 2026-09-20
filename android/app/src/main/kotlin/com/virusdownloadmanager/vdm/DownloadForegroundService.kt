@@ -1,4 +1,4 @@
-package com.example.virusdownloader
+package com.virusdownloadmanager.vdm
 
 import android.app.Notification
 import android.app.NotificationChannel
@@ -19,8 +19,8 @@ class DownloadForegroundService : Service() {
     companion object {
         private const val CHANNEL_ID = "vdown_background_channel"
         private const val NOTIFICATION_ID = 98491
-        const val ACTION_START = "com.virusdownloader.action.START"
-        const val ACTION_STOP = "com.virusdownloader.action.STOP"
+        const val ACTION_START = "com.virusdownloadmanager.vdm.action.START"
+        const val ACTION_STOP = "com.virusdownloadmanager.vdm.action.STOP"
 
         fun start(context: Context) {
             val intent = Intent(context, DownloadForegroundService::class.java).apply {
@@ -47,7 +47,7 @@ class DownloadForegroundService : Service() {
         val powerManager = getSystemService(POWER_SERVICE) as PowerManager
         wakeLock = powerManager.newWakeLock(
             PowerManager.PARTIAL_WAKE_LOCK,
-            "VirusDownloader:ForegroundServiceWakeLock"
+            "VDM:ForegroundServiceWakeLock"
         ).apply {
             setReferenceCounted(false)
         }
@@ -59,7 +59,7 @@ class DownloadForegroundService : Service() {
             return START_NOT_STICKY
         }
 
-        val notification = buildNotification("VirusDownloader is running in background")
+        val notification = buildNotification("VDM is running in background")
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             startForeground(
                 NOTIFICATION_ID,
@@ -121,7 +121,7 @@ class DownloadForegroundService : Service() {
         } else null
 
         return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("VirusDownloader")
+            .setContentTitle("VDM")
             .setContentText(contentText)
             .setSmallIcon(R.mipmap.ic_launcher)
             .setContentIntent(pendingIntent)

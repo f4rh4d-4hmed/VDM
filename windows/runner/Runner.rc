@@ -89,13 +89,13 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "com.example" "\0"
-            VALUE "FileDescription", "virusdownloader" "\0"
+            VALUE "CompanyName", "com.virusdownloadmanager" "\0"
+            VALUE "FileDescription", "Virus Download Manager" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "virusdownloader" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2026 com.example. All rights reserved." "\0"
-            VALUE "OriginalFilename", "virusdownloader.exe" "\0"
-            VALUE "ProductName", "virusdownloader" "\0"
+            VALUE "InternalName", "Virus Download Manager" "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2026 com.virusdownloadmanager. All rights reserved." "\0"
+            VALUE "OriginalFilename", "virus_download_manager.exe" "\0"
+            VALUE "ProductName", "Virus Download Manager" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

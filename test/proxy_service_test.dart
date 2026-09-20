@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:virusdownloader/domain/models/proxy_config.dart';
+import 'package:virus_download_manager/domain/models/proxy_config.dart';
 
 void main() {
   group('ProxyConfig Parsing & Serialization Tests', () {

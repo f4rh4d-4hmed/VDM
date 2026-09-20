@@ -1,4 +1,4 @@
-package com.example.virusdownloader
+package com.virusdownloadmanager.vdm
 
 import android.content.Intent
 import android.net.Uri
@@ -13,9 +13,9 @@ import io.flutter.plugin.common.MethodChannel
 import java.io.File
 
 class MainActivity : FlutterActivity() {
-    private val FILE_CHANNEL = "com.virusdownloader/file_open"
-    private val PERMISSION_CHANNEL = "com.virusdownloader/permissions"
-    private val BACKGROUND_CHANNEL = "com.virusdownloader/background_service"
+    private val FILE_CHANNEL = "com.virusdownloadmanager.vdm/file_open"
+    private val PERMISSION_CHANNEL = "com.virusdownloadmanager.vdm/permissions"
+    private val BACKGROUND_CHANNEL = "com.virusdownloadmanager.vdm/background_service"
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -51,7 +51,7 @@ class MainActivity : FlutterActivity() {
                     val downloadDir = Environment.getExternalStoragePublicDirectory(
                         Environment.DIRECTORY_DOWNLOADS
                     )
-                    val appDir = File(downloadDir, "VirusDownloader")
+                    val appDir = File(downloadDir, "VDM")
                     if (!appDir.exists()) {
                         appDir.mkdirs()
                     }
@@ -152,3 +152,4 @@ class MainActivity : FlutterActivity() {
         }
     }
 }
+

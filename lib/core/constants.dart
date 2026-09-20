@@ -1,5 +1,7 @@
+import 'dart:io';
+
 class AppConstants {
-  static const String appName = 'VirusDownloader';
+  static String get appName => Platform.isAndroid ? 'VDM' : 'Virus Download Manager';
   
   // Layout breakpoints
   static const double compactWidth = 600.0;

@@ -1,4 +1,4 @@
-package com.example.virusdownloader
+package com.virusdownloadmanager.vdm
 
 import android.content.BroadcastReceiver
 import android.content.Context

@@ -1,7 +1,7 @@
-﻿import 'package:flutter/gestures.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:virusdownloader/core/app_scroll_behavior.dart';
+import 'package:virus_download_manager/core/app_scroll_behavior.dart';
 
 void main() {
   test('AppScrollBehavior allows mouse drag scrolling and trackpad gestures', () {

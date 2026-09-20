@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
-import 'package:virusdownloader/core/enums.dart';
-import 'package:virusdownloader/data/repositories/settings_repository.dart';
-import 'package:virusdownloader/data/services/browser_integration_service.dart';
-import 'package:virusdownloader/data/services/integration_server_service.dart';
-import 'package:virusdownloader/data/services/proxy_service.dart';
-import 'package:virusdownloader/data/services/storage_service.dart';
-import 'package:virusdownloader/domain/models/app_settings.dart';
-import 'package:virusdownloader/domain/models/proxy_config.dart';
-import 'package:virusdownloader/ui/view_models/settings_view_model.dart';
-import 'package:virusdownloader/ui/views/proxy_settings_section.dart';
+import 'package:virus_download_manager/core/enums.dart';
+import 'package:virus_download_manager/data/repositories/settings_repository.dart';
+import 'package:virus_download_manager/data/services/browser_integration_service.dart';
+import 'package:virus_download_manager/data/services/integration_server_service.dart';
+import 'package:virus_download_manager/data/services/proxy_service.dart';
+import 'package:virus_download_manager/data/services/storage_service.dart';
+import 'package:virus_download_manager/domain/models/app_settings.dart';
+import 'package:virus_download_manager/domain/models/proxy_config.dart';
+import 'package:virus_download_manager/ui/view_models/settings_view_model.dart';
+import 'package:virus_download_manager/ui/views/proxy_settings_section.dart';
 
 class MockStorageService implements StorageService {
   AppSettings storedSettings = const AppSettings();

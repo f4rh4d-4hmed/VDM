@@ -1,13 +1,13 @@
 import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:virusdownloader/core/enums.dart';
-import 'package:virusdownloader/data/repositories/download_repository.dart';
-import 'package:virusdownloader/data/repositories/settings_repository.dart';
-import 'package:virusdownloader/data/services/file_service.dart';
-import 'package:virusdownloader/data/services/http_download_service.dart';
-import 'package:virusdownloader/data/services/storage_service.dart';
-import 'package:virusdownloader/ui/view_models/downloads_view_model.dart';
+import 'package:virus_download_manager/core/enums.dart';
+import 'package:virus_download_manager/data/repositories/download_repository.dart';
+import 'package:virus_download_manager/data/repositories/settings_repository.dart';
+import 'package:virus_download_manager/data/services/file_service.dart';
+import 'package:virus_download_manager/data/services/http_download_service.dart';
+import 'package:virus_download_manager/data/services/storage_service.dart';
+import 'package:virus_download_manager/ui/view_models/downloads_view_model.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

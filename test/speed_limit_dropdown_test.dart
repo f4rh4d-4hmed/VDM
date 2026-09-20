@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:virusdownloader/core/enums.dart';
-import 'package:virusdownloader/ui/widgets/app_animated_dropdown.dart';
-import 'package:virusdownloader/ui/widgets/speed_limit_icon.dart';
+import 'package:virus_download_manager/core/enums.dart';
+import 'package:virus_download_manager/ui/widgets/app_animated_dropdown.dart';
+import 'package:virus_download_manager/ui/widgets/speed_limit_icon.dart';
 
 void main() {
   group('SpeedLimitIcon Tests', () {

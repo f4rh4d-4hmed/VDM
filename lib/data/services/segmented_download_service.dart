@@ -4,7 +4,6 @@ import 'dart:io';
 import 'dart:math' as math;
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import 'package:path_provider/path_provider.dart';
 import '../../core/enums.dart';
 import '../../core/utils.dart';
 import '../../domain/models/proxy_config.dart';
@@ -129,6 +128,7 @@ class SegmentedDownloadService {
     required String url,
     required String savePath,
     String? tempPath,
+    String? metaPath,
     required int workerCount,
     required CancelToken cancelToken,
     required DownloadProgressCallback onProgress,
@@ -222,16 +222,7 @@ class SegmentedDownloadService {
         totalBytes > 0 &&
         totalBytes < maxPlaceholderFileSize;
 
-    String activeFilePath = tempPath ?? savePath;
-    if (tempPath == null && AppUtils.isMobile && Platform.isAndroid && shouldPreallocate) {
-      try {
-        final tempDir = await getApplicationSupportDirectory();
-        final fileName = savePath.split(Platform.pathSeparator).last;
-        activeFilePath = '${tempDir.path}${Platform.pathSeparator}$fileName';
-      } catch (_) {
-        activeFilePath = savePath;
-      }
-    }
+    final String activeFilePath = tempPath ?? savePath;
 
     // If server does not support byte ranges or size is unknown, fallback to single stream
     if (!isResumable || totalBytes <= 0 || (workerCount <= 1 && speedLimitMode != SpeedLimitMode.rocket)) {
@@ -266,23 +257,25 @@ class SegmentedDownloadService {
     }
 
     // Check for existing metadata (resuming segmented download)
-    final metaFile = File('$activeFilePath.vdown_meta');
+    final metaFile = File(metaPath ?? '$activeFilePath.vdown_meta');
     bool metaRestored = false;
 
-    // Failsafe migration: if metadata exists at savePath but not activeFilePath (legacy resume)
-    if (!await metaFile.exists() && activeFilePath != savePath) {
+    // Failsafe migration: if metadata exists at legacy locations but not metaFile
+    if (!await metaFile.exists()) {
       final legacyMeta = File('$savePath.vdown_meta');
       if (await legacyMeta.exists()) {
         try {
           await legacyMeta.copy(metaFile.path);
           await fileService.deleteFile(legacyMeta.path);
         } catch (_) {}
-      }
-      final legacyData = File(savePath);
-      if (await legacyData.exists() && !await File(activeFilePath).exists()) {
-        try {
-          await fileService.moveFile(savePath, activeFilePath);
-        } catch (_) {}
+      } else if (tempPath != null) {
+        final legacyTempMeta = File('$tempPath.vdown_meta');
+        if (await legacyTempMeta.exists()) {
+          try {
+            await legacyTempMeta.copy(metaFile.path);
+            await fileService.deleteFile(legacyTempMeta.path);
+          } catch (_) {}
+        }
       }
     }
 

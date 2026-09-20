@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:virusdownloader/core/enums.dart';
-import 'package:virusdownloader/core/theme.dart';
-import 'package:virusdownloader/data/services/file_service.dart';
-import 'package:virusdownloader/domain/models/download_task.dart';
-import 'package:virusdownloader/ui/views/download_complete_dialog.dart';
+import 'package:virus_download_manager/core/enums.dart';
+import 'package:virus_download_manager/core/theme.dart';
+import 'package:virus_download_manager/data/services/file_service.dart';
+import 'package:virus_download_manager/domain/models/download_task.dart';
+import 'package:virus_download_manager/ui/views/download_complete_dialog.dart';
 
 class FakeFileService extends Fake implements FileService {
   @override

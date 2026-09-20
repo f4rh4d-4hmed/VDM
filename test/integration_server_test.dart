@@ -2,16 +2,15 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:virusdownloader/core/constants.dart';
-import 'package:virusdownloader/core/enums.dart';
-import 'package:virusdownloader/core/utils.dart';
-import 'package:virusdownloader/data/repositories/download_repository.dart';
-import 'package:virusdownloader/data/repositories/settings_repository.dart';
-import 'package:virusdownloader/data/services/antivirus_service.dart';
-import 'package:virusdownloader/data/services/file_service.dart';
-import 'package:virusdownloader/data/services/http_download_service.dart';
-import 'package:virusdownloader/data/services/integration_server_service.dart';
-import 'package:virusdownloader/data/services/storage_service.dart';
+import 'package:virus_download_manager/core/enums.dart';
+import 'package:virus_download_manager/core/utils.dart';
+import 'package:virus_download_manager/data/repositories/download_repository.dart';
+import 'package:virus_download_manager/data/repositories/settings_repository.dart';
+import 'package:virus_download_manager/data/services/antivirus_service.dart';
+import 'package:virus_download_manager/data/services/file_service.dart';
+import 'package:virus_download_manager/data/services/http_download_service.dart';
+import 'package:virus_download_manager/data/services/integration_server_service.dart';
+import 'package:virus_download_manager/data/services/storage_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

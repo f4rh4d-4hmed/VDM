@@ -2,8 +2,8 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:virusdownloader/core/enums.dart';
-import 'package:virusdownloader/data/services/integrity_service.dart';
+import 'package:virus_download_manager/core/enums.dart';
+import 'package:virus_download_manager/data/services/integrity_service.dart';
 
 void main() {
   group('IntegrityService & Hashing Tests', () {

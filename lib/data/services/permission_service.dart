@@ -6,7 +6,7 @@ import '../../core/utils.dart';
 
 class PermissionService {
   /// MethodChannel for native Android permission operations
-  static const _permChannel = MethodChannel('com.virusdownloader/permissions');
+  static const _permChannel = MethodChannel('com.virusdownloadmanager.vdm/permissions');
 
   /// Request notification permission on Android 13+ (POST_NOTIFICATIONS)
   Future<bool> requestNotificationPermission() async {

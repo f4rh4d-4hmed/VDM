@@ -1,13 +1,13 @@
 import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:virusdownloader/core/enums.dart';
-import 'package:virusdownloader/data/repositories/download_repository.dart';
-import 'package:virusdownloader/data/repositories/settings_repository.dart';
-import 'package:virusdownloader/data/services/file_service.dart';
-import 'package:virusdownloader/data/services/http_download_service.dart';
-import 'package:virusdownloader/data/services/storage_service.dart';
-import 'package:virusdownloader/domain/models/download_task.dart';
+import 'package:virus_download_manager/core/enums.dart';
+import 'package:virus_download_manager/data/repositories/download_repository.dart';
+import 'package:virus_download_manager/data/repositories/settings_repository.dart';
+import 'package:virus_download_manager/data/services/file_service.dart';
+import 'package:virus_download_manager/data/services/http_download_service.dart';
+import 'package:virus_download_manager/data/services/storage_service.dart';
+import 'package:virus_download_manager/domain/models/download_task.dart';
 
 class _MockFileService extends FileService {
   bool deleteFileCalled = false;
@@ -221,9 +221,9 @@ void main() {
       final actualService = FileService(customBaseTempDir: tempTestDir);
 
       final taskAPath = await actualService.getTaskTempFilePath('taskA', 'video.mp4');
-      final taskAMeta = '$taskAPath.vdown_meta';
+      final taskAMeta = await actualService.getTaskMetaFilePath('taskA', 'video.mp4');
       final taskBPath = await actualService.getTaskTempFilePath('taskB', 'archive.zip');
-      final taskBMeta = '$taskBPath.vdown_meta';
+      final taskBMeta = await actualService.getTaskMetaFilePath('taskB', 'archive.zip');
 
       await File(taskAPath).writeAsString('task A data');
       await File(taskAMeta).writeAsString('task A meta');
