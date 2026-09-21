@@ -22,7 +22,7 @@ class TaskbarService {
   /// - 1 downloading task: shows progress for that specific download.
   /// - >1 downloading tasks: calculates and displays overall combined progress.
   void updateProgress(List<DownloadTask> tasks) {
-    if (kIsWeb || !Platform.isWindows) return;
+    if (kIsWeb || (!Platform.isWindows && mockSetProgressMode == null)) return;
 
     try {
       final downloadingTasks = tasks
@@ -104,7 +104,7 @@ class TaskbarService {
 
   /// Clears the taskbar progress bar
   void clear() {
-    if (kIsWeb || !Platform.isWindows) return;
+    if (kIsWeb || (!Platform.isWindows && mockSetProgressMode == null)) return;
     try {
       _setMode(TaskbarProgressMode.noProgress);
       _lastCompleted = -1;
