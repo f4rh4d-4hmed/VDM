@@ -92,7 +92,12 @@ jobs:
 
       - name: Build Windows Installer (Inno Setup)
         shell: bash
+        env:
+          MSYS2_ARG_CONV_EXCL: "*"
+          MSYS_NO_PATHCONV: "1"
         run: |
+          export MSYS2_ARG_CONV_EXCL="*"
+          export MSYS_NO_PATHCONV=1
           mkdir -p dist
           if command -v iscc >/dev/null 2>&1; then
             ISCC_CMD="iscc"
@@ -104,7 +109,7 @@ jobs:
             choco install innosetup -y
             ISCC_CMD="C:/Program Files (x86)/Inno Setup 6/ISCC.exe"
           fi
-          "$ISCC_CMD" "/DMyAppVersion=${{ needs.version.outputs.build_name }}" "/DMyTag=${{ needs.version.outputs.tag }}" windows/installer/installer.iss
+          "$ISCC_CMD" "-DMyAppVersion=${{ needs.version.outputs.build_name }}" "-DMyTag=${{ needs.version.outputs.tag }}" windows/installer/installer.iss
 
       - name: Compress Windows Build
         shell: bash

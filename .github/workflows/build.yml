@@ -106,25 +106,10 @@ jobs:
           python -m pip install crx3
           python extras/pack_extension.py
 
-      - name: Build Windows Installer (Inno Setup)
+      - name: Compress Windows Build (Portable)
         shell: bash
         run: |
           mkdir -p dist
-          if command -v iscc >/dev/null 2>&1; then
-            ISCC_CMD="iscc"
-          elif [ -f "C:/Program Files (x86)/Inno Setup 6/ISCC.exe" ]; then
-            ISCC_CMD="C:/Program Files (x86)/Inno Setup 6/ISCC.exe"
-          elif [ -f "C:/Program Files/Inno Setup 6/ISCC.exe" ]; then
-            ISCC_CMD="C:/Program Files/Inno Setup 6/ISCC.exe"
-          else
-            choco install innosetup -y
-            ISCC_CMD="C:/Program Files (x86)/Inno Setup 6/ISCC.exe"
-          fi
-          "$ISCC_CMD" "/DMyAppVersion=${{ env.BUILD_NAME }}" "/DMyTag=v${{ env.BUILD_NAME }}" windows/installer/installer.iss
-
-      - name: Compress Windows Build for Telegram
-        shell: bash
-        run: |
           7z a -tzip "VirusDownloader-Windows-x64-v${{ env.BUILD_NAME }}.zip" "./build/windows/x64/runner/Release/*"
           cp "VirusDownloader-Windows-x64-v${{ env.BUILD_NAME }}.zip" dist/
 
