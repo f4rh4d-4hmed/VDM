@@ -177,7 +177,7 @@ begin
     Exit;
   end;
 
-  Form := CreateCustomForm();
+  Form := CreateCustomForm(ScaleX(460), ScaleY(240), False, False);
   try
     Form.ClientWidth := ScaleX(460);
     Form.ClientHeight := ScaleY(240);
