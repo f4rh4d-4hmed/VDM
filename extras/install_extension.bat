@@ -37,7 +37,8 @@ if %ERRORLEVEL% equ 0 (
 
 REM Fallback purely in Windows Batch & Reg command
 set "EXT_ID=jdkegfbblbdneoeabighglhgkpfpebji"
-set "EXE_PATH=%APP_DIR%\virus_download_manager.exe"
+set "EXE_PATH=%APP_DIR%\vdm.exe"
+if not exist "%EXE_PATH%" set "EXE_PATH=%APP_DIR%\virus_download_manager.exe"
 if not exist "%EXE_PATH%" set "EXE_PATH=%APP_DIR%\virusdownloader.exe"
 
 if "%ACTION%"=="uninstall" (

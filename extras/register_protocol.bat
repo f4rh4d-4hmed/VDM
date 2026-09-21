@@ -16,22 +16,22 @@ if /i "%~1"=="/uninstall" (
 )
 
 set "APP_DIR=%~dp0.."
-set "EXE_PATH=%APP_DIR%\virus_download_manager.exe"
+set "EXE_PATH=%APP_DIR%\vdm.exe"
+if not exist "%EXE_PATH%" (
+    set "EXE_PATH=%APP_DIR%\build\windows\x64\runner\Release\vdm.exe"
+)
+if not exist "%EXE_PATH%" (
+    set "EXE_PATH=%APP_DIR%\build\windows\x64\runner\Debug\vdm.exe"
+)
+if not exist "%EXE_PATH%" (
+    set "EXE_PATH=%APP_DIR%\virus_download_manager.exe"
+)
 if not exist "%EXE_PATH%" (
     set "EXE_PATH=%APP_DIR%\virusdownloader.exe"
 )
 if not exist "%EXE_PATH%" (
-    set "EXE_PATH=%APP_DIR%\build\windows\x64\runner\Release\virus_download_manager.exe"
-)
-if not exist "%EXE_PATH%" (
-    set "EXE_PATH=%APP_DIR%\build\windows\x64\runner\Release\virusdownloader.exe"
-)
-if not exist "%EXE_PATH%" (
-    set "EXE_PATH=%APP_DIR%\build\windows\x64\runner\Debug\virus_download_manager.exe"
-)
-if not exist "%EXE_PATH%" (
     echo [VirusDownloader] Executable not found in build directory. Using current directory.
-    set "EXE_PATH=%cd%\virus_download_manager.exe"
+    set "EXE_PATH=%cd%\vdm.exe"
 )
 
 echo [VirusDownloader] Registering virusdownloader:// custom URI protocol...

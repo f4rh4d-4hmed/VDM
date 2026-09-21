@@ -16,7 +16,7 @@
 #define MyAppName "Virus Download Manager"
 #define MyAppPublisher "f4rh4d-4hmed"
 #define MyAppURL "https://github.com/f4rh4d-4hmed/VDM"
-#define MyAppExeName "virus_download_manager.exe"
+#define MyAppExeName "vdm.exe"
 #define MyExtensionId "jdkegfbblbdneoeabighglhgkpfpebji"
 
 [Setup]
@@ -42,6 +42,8 @@ SolidCompression=yes
 WizardStyle=modern
 ArchitecturesInstallIn64BitMode=x64
 ArchitecturesAllowed=x64
+CloseApplications=yes
+CloseApplicationsFilter=*vdm.exe,*virus_download_manager.exe,*virusdownloader.exe
 
 ; Dual-mode installation:
 ; Prompts the user on setup launch: "Install for all users (recommended)" / "Install for me only"
@@ -58,9 +60,6 @@ Name: "browserext"; Description: "Register browser extension for Chrome, Edge, B
 [Files]
 ; Main Flutter Application Release Bundle
 Source: "..\..\build\windows\x64\runner\Release\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
-
-; Secondary alias executable
-Source: "..\..\build\windows\x64\runner\Release\virus_download_manager.exe"; DestDir: "{app}"; DestName: "virusdownloader.exe"; Flags: ignoreversion
 
 ; App Icon
 Source: "..\runner\resources\app_icon.ico"; DestDir: "{app}"; Flags: ignoreversion
@@ -91,8 +90,6 @@ Root: HKA; Subkey: "Software\Classes\virusdownloader\shell\open\command"; ValueT
 ; App Paths for Run command
 Root: HKA; Subkey: "Software\Microsoft\Windows\CurrentVersion\App Paths\{#MyAppExeName}"; ValueType: string; ValueData: "{app}\{#MyAppExeName}"; Flags: uninsdeletekey
 Root: HKA; Subkey: "Software\Microsoft\Windows\CurrentVersion\App Paths\{#MyAppExeName}"; ValueType: string; ValueName: "Path"; ValueData: "{app}"; Flags: uninsdeletekey
-Root: HKA; Subkey: "Software\Microsoft\Windows\CurrentVersion\App Paths\virusdownloader.exe"; ValueType: string; ValueData: "{app}\virusdownloader.exe"; Flags: uninsdeletekey
-Root: HKA; Subkey: "Software\Microsoft\Windows\CurrentVersion\App Paths\virusdownloader.exe"; ValueType: string; ValueName: "Path"; ValueData: "{app}"; Flags: uninsdeletekey
 
 ; Browser External Extension Entries
 Root: HKA; Subkey: "Software\Google\Chrome\Extensions\{#MyExtensionId}"; ValueType: string; ValueName: "update_url"; ValueData: "http://127.0.0.1:9849/update.xml"; Flags: uninsdeletekey
@@ -112,6 +109,12 @@ Root: HKA; Subkey: "Software\BraveSoftware\Brave-Browser\Extensions\{#MyExtensio
 Filename: "{app}\extras\install_extension.bat"; Parameters: "/install /silent"; Flags: runhidden; Tasks: browserext
 ; Post-installation launch option
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#MyAppName}}"; Flags: nowait postinstall skipifsilent
+
+[UninstallRun]
+; Forcefully close running application instances before file removal
+Filename: "{sys}\taskkill.exe"; Parameters: "/F /IM vdm.exe /T"; Flags: runhidden
+Filename: "{sys}\taskkill.exe"; Parameters: "/F /IM virus_download_manager.exe /T"; Flags: runhidden
+Filename: "{sys}\taskkill.exe"; Parameters: "/F /IM virusdownloader.exe /T"; Flags: runhidden
 
 [Code]
 var
@@ -160,11 +163,25 @@ begin
   end;
 end;
 
+// Terminate any running app instances and sub-processes to release file locks
+procedure KillRunningApp();
+var
+  ResultCode: Integer;
+begin
+  try
+    Exec(ExpandConstant('{sys}\taskkill.exe'), '/F /IM vdm.exe /T', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+    Exec(ExpandConstant('{sys}\taskkill.exe'), '/F /IM virus_download_manager.exe /T', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+    Exec(ExpandConstant('{sys}\taskkill.exe'), '/F /IM virusdownloader.exe /T', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+    Sleep(400);
+  except
+  end;
+end;
+
 // Uninstaller Initialization: Presents clear option to keep or delete user data
 function InitializeUninstall(): Boolean;
 var
   Form: TSetupForm;
-  PromptLabel, Desc1Label, Desc2Label, NoteLabel: TLabel;
+  PromptLabel, Desc1Label, Desc2Label, NoteLabel: TNewStaticText;
   KeepRadio, DeleteRadio: TNewRadioButton;
   OkButton, CancelButton: TNewButton;
 begin
@@ -174,82 +191,90 @@ begin
   if UninstallSilent() then
   begin
     RemoveUserData := (Pos('/DELETEUSERDATA', UpperCase(GetCmdTail())) > 0);
+    KillRunningApp();
     Exit;
   end;
 
-  Form := CreateCustomForm(ScaleX(460), ScaleY(240), False, False);
+  Form := CreateCustomForm(ScaleX(490), ScaleY(275), False, False);
   try
-    Form.ClientWidth := ScaleX(460);
-    Form.ClientHeight := ScaleY(240);
+    Form.ClientWidth := ScaleX(490);
+    Form.ClientHeight := ScaleY(275);
     Form.Caption := 'VirusDownloader Uninstaller';
     Form.Position := poScreenCenter;
     Form.BorderStyle := bsDialog;
 
-    PromptLabel := TLabel.Create(Form);
+    PromptLabel := TNewStaticText.Create(Form);
     PromptLabel.Parent := Form;
     PromptLabel.Left := ScaleX(24);
     PromptLabel.Top := ScaleY(18);
-    PromptLabel.Width := ScaleX(412);
+    PromptLabel.Width := ScaleX(442);
     PromptLabel.Font.Style := [fsBold];
-    PromptLabel.Font.Size := 9;
     PromptLabel.Caption := 'Choose whether to keep or remove your VirusDownloader user data:';
 
     KeepRadio := TNewRadioButton.Create(Form);
     KeepRadio.Parent := Form;
-    KeepRadio.Left := ScaleX(30);
+    KeepRadio.Left := ScaleX(24);
     KeepRadio.Top := ScaleY(48);
-    KeepRadio.Width := ScaleX(400);
+    KeepRadio.Width := ScaleX(442);
     KeepRadio.Font.Style := [fsBold];
     KeepRadio.Caption := 'Keep user data (Recommended)';
     KeepRadio.Checked := True;
 
-    Desc1Label := TLabel.Create(Form);
+    Desc1Label := TNewStaticText.Create(Form);
     Desc1Label.Parent := Form;
-    Desc1Label.Left := ScaleX(48);
-    Desc1Label.Top := ScaleY(68);
-    Desc1Label.Width := ScaleX(380);
+    Desc1Label.AutoSize := False;
     Desc1Label.WordWrap := True;
-    Desc1Label.Caption := 'Preserves settings, history, and preferences for future installations.';
+    Desc1Label.Left := ScaleX(44);
+    Desc1Label.Top := ScaleY(72);
+    Desc1Label.Width := ScaleX(422);
+    Desc1Label.Height := ScaleY(28);
+    Desc1Label.Caption := 'Preserves settings, download history, and preferences for future installations.';
 
     DeleteRadio := TNewRadioButton.Create(Form);
     DeleteRadio.Parent := Form;
-    DeleteRadio.Left := ScaleX(30);
-    DeleteRadio.Top := ScaleY(100);
-    DeleteRadio.Width := ScaleX(400);
+    DeleteRadio.Left := ScaleX(24);
+    DeleteRadio.Top := ScaleY(110);
+    DeleteRadio.Width := ScaleX(442);
     DeleteRadio.Font.Style := [fsBold];
     DeleteRadio.Caption := 'Remove all user data';
 
-    Desc2Label := TLabel.Create(Form);
+    Desc2Label := TNewStaticText.Create(Form);
     Desc2Label.Parent := Form;
-    Desc2Label.Left := ScaleX(48);
-    Desc2Label.Top := ScaleY(120);
-    Desc2Label.Width := ScaleX(380);
+    Desc2Label.AutoSize := False;
     Desc2Label.WordWrap := True;
+    Desc2Label.Left := ScaleX(44);
+    Desc2Label.Top := ScaleY(134);
+    Desc2Label.Width := ScaleX(422);
+    Desc2Label.Height := ScaleY(28);
     Desc2Label.Caption := 'Deletes download task history, cached data, and preferences completely.';
 
-    NoteLabel := TLabel.Create(Form);
+    NoteLabel := TNewStaticText.Create(Form);
     NoteLabel.Parent := Form;
-    NoteLabel.Left := ScaleX(30);
-    NoteLabel.Top := ScaleY(154);
-    NoteLabel.Width := ScaleX(400);
+    NoteLabel.AutoSize := False;
     NoteLabel.WordWrap := True;
+    NoteLabel.Left := ScaleX(24);
+    NoteLabel.Top := ScaleY(174);
+    NoteLabel.Width := ScaleX(442);
+    NoteLabel.Height := ScaleY(32);
     NoteLabel.Font.Color := clGrayText;
-    NoteLabel.Caption := 'Note: Files you have downloaded to your Downloads folder will NOT be deleted under either option.';
+    NoteLabel.Caption := 'Note: Files you have already saved in your Downloads folder will NOT be deleted.';
 
     OkButton := TNewButton.Create(Form);
     OkButton.Parent := Form;
-    OkButton.Left := ScaleX(275);
-    OkButton.Top := ScaleY(195);
+    OkButton.Left := ScaleX(300);
+    OkButton.Top := ScaleY(225);
     OkButton.Width := ScaleX(80);
+    OkButton.Height := ScaleY(26);
     OkButton.Caption := 'Continue';
     OkButton.ModalResult := mrOk;
     OkButton.Default := True;
 
     CancelButton := TNewButton.Create(Form);
     CancelButton.Parent := Form;
-    CancelButton.Left := ScaleX(365);
-    CancelButton.Top := ScaleY(195);
+    CancelButton.Left := ScaleX(390);
+    CancelButton.Top := ScaleY(225);
     CancelButton.Width := ScaleX(80);
+    CancelButton.Height := ScaleY(26);
     CancelButton.Caption := 'Cancel';
     CancelButton.ModalResult := mrCancel;
     CancelButton.Cancel := True;
@@ -257,6 +282,7 @@ begin
     if Form.ShowModal() = mrOk then
     begin
       RemoveUserData := DeleteRadio.Checked;
+      KillRunningApp();
     end
     else
     begin
@@ -277,6 +303,9 @@ begin
 
   if CurUninstallStep = usUninstall then
   begin
+    // Terminate any lingering app processes before file operations
+    KillRunningApp();
+
     // Run extension uninstaller helper if present
     AppBat := ExpandConstant('{app}\extras\install_extension.bat');
     if FileExists(AppBat) then
@@ -342,6 +371,8 @@ begin
     CleanRegistryValue(HKEY_LOCAL_MACHINE, 'Software\Microsoft\Windows\CurrentVersion\Run', 'VirusDownloader');
 
     // App Paths
+    CleanRegistryKey(HKEY_CURRENT_USER, 'Software\Microsoft\Windows\CurrentVersion\App Paths\vdm.exe');
+    CleanRegistryKey(HKEY_LOCAL_MACHINE, 'Software\Microsoft\Windows\CurrentVersion\App Paths\vdm.exe');
     CleanRegistryKey(HKEY_CURRENT_USER, 'Software\Microsoft\Windows\CurrentVersion\App Paths\virus_download_manager.exe');
     CleanRegistryKey(HKEY_LOCAL_MACHINE, 'Software\Microsoft\Windows\CurrentVersion\App Paths\virus_download_manager.exe');
     CleanRegistryKey(HKEY_CURRENT_USER, 'Software\Microsoft\Windows\CurrentVersion\App Paths\virusdownloader.exe');

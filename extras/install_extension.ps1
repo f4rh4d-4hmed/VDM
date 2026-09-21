@@ -35,9 +35,15 @@ if (-not $AppDir -or -not (Test-Path $AppDir)) {
 }
 
 # Resolve executable
-$ExePath = Join-Path $AppDir "virus_download_manager.exe"
+$ExePath = Join-Path $AppDir "vdm.exe"
+if (-not (Test-Path $ExePath)) {
+    $ExePath = Join-Path $AppDir "virus_download_manager.exe"
+}
 if (-not (Test-Path $ExePath)) {
     $ExePath = Join-Path $AppDir "virusdownloader.exe"
+}
+if (-not (Test-Path $ExePath)) {
+    $ExePath = Join-Path (Join-Path $AppDir "build\windows\x64\runner\Release") "vdm.exe"
 }
 if (-not (Test-Path $ExePath)) {
     $ExePath = Join-Path (Join-Path $AppDir "build\windows\x64\runner\Release") "virus_download_manager.exe"
@@ -209,7 +215,7 @@ function Register-NativeMessagingHosts {
     $manifestObj = @{
         name = $NativeHostName
         description = "VirusDownloader Native Messaging Host"
-        path = if (Test-Path $ExePath) { $ExePath } else { "virus_download_manager.exe" }
+        path = if (Test-Path $ExePath) { $ExePath } else { "vdm.exe" }
         type = "stdio"
         allowed_origins = @(
             "chrome-extension://$ExtensionId/"
