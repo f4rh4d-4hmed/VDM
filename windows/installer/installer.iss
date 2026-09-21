@@ -171,7 +171,7 @@ begin
   Result := True;
   RemoveUserData := False;
 
-  if WizardSilent() then
+  if UninstallSilent() then
   begin
     RemoveUserData := (Pos('/DELETEUSERDATA', UpperCase(GetCmdTail())) > 0);
     Exit;
