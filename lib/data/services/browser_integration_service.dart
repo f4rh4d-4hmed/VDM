@@ -47,6 +47,10 @@ class BrowserIntegrationService {
 
     // 2. Check executable directory on desktop
     final exeDir = File(Platform.resolvedExecutable).parent;
+    final installedExtDir = Directory(p.join(exeDir.path, 'extension'));
+    if (await installedExtDir.exists() && await File(p.join(installedExtDir.path, 'manifest.json')).exists()) {
+      return installedExtDir.path;
+    }
     final exeExtrasDir = Directory(p.join(exeDir.path, 'extras', 'extension'));
     if (await exeExtrasDir.exists() && await File(p.join(exeExtrasDir.path, 'manifest.json')).exists()) {
       return exeExtrasDir.path;

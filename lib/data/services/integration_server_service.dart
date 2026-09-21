@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:path/path.dart' as p;
 
 import '../../core/constants.dart';
 import '../../core/enums.dart';
@@ -175,6 +176,68 @@ class IntegrationServerService extends ChangeNotifier {
         'port': _server?.port ?? port,
         'uptime': DateTime.now().toIso8601String(),
       }));
+      await request.response.close();
+      return;
+    }
+
+    // 5b. Extension update manifest endpoint for Chromium enterprise / policy install
+    if (request.method == 'GET' && path == '/update.xml') {
+      final candidates = [
+        File(p.join(Directory.current.path, 'extras', 'update.xml')),
+        File(p.join(File(Platform.resolvedExecutable).parent.path, 'extension', 'update.xml')),
+        File(p.join(File(Platform.resolvedExecutable).parent.path, 'extras', 'update.xml')),
+      ];
+      File? found;
+      for (final f in candidates) {
+        if (f.existsSync()) {
+          found = f;
+          break;
+        }
+      }
+      if (found != null) {
+        request.response.headers.contentType = ContentType('application', 'xml', charset: 'utf-8');
+        request.response.statusCode = HttpStatus.ok;
+        await request.response.addStream(found.openRead());
+        await request.response.close();
+        return;
+      }
+      const defaultXml = '<?xml version="1.0" encoding="UTF-8"?>\n'
+          '<gupdate xmlns="http://www.google.com/update2/response" protocol="2.0">\n'
+          '  <app appid="jdkegfbblbdneoeabighglhgkpfpebji">\n'
+          '    <updatecheck codebase="http://127.0.0.1:9849/extension.crx" version="1.0.0" />\n'
+          '  </app>\n'
+          '</gupdate>\n';
+      request.response.headers.contentType = ContentType('application', 'xml', charset: 'utf-8');
+      request.response.statusCode = HttpStatus.ok;
+      request.response.write(defaultXml);
+      await request.response.close();
+      return;
+    }
+
+    // 5c. Extension packaged CRX download endpoint
+    if (request.method == 'GET' && path == '/extension.crx') {
+      final candidates = [
+        File(p.join(Directory.current.path, 'extras', 'extension.crx')),
+        File(p.join(File(Platform.resolvedExecutable).parent.path, 'extension', 'extension.crx')),
+        File(p.join(File(Platform.resolvedExecutable).parent.path, 'extras', 'extension.crx')),
+      ];
+      File? found;
+      for (final f in candidates) {
+        if (f.existsSync()) {
+          found = f;
+          break;
+        }
+      }
+      if (found != null) {
+        request.response.headers.contentType = ContentType('application', 'x-chrome-extension');
+        request.response.statusCode = HttpStatus.ok;
+        await request.response.addStream(found.openRead());
+        await request.response.close();
+        return;
+      }
+      request.response.statusCode = HttpStatus.notFound;
+      request.response.headers.contentType = ContentType.json;
+      request.response.write(jsonEncode({'error': 'CRX not found'}));
       await request.response.close();
       return;
     }

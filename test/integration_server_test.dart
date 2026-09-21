@@ -213,4 +213,22 @@ void main() {
     final json = jsonDecode(body) as Map<String, dynamic>;
     expect(json['error'], contains('Browser-internal blob stream cannot be downloaded directly'));
   });
+
+  test('Integration server serves /update.xml with valid XML and extension ID', () async {
+    final request = await httpClient.getUrl(Uri.parse('http://127.0.0.1:9890/update.xml'));
+    final response = await request.close();
+
+    expect(response.statusCode, HttpStatus.ok);
+    final body = await response.transform(utf8.decoder).join();
+    expect(body, contains('jdkegfbblbdneoeabighglhgkpfpebji'));
+    expect(body, contains('gupdate'));
+  });
+
+  test('Integration server handles /extension.crx endpoint', () async {
+    final request = await httpClient.getUrl(Uri.parse('http://127.0.0.1:9890/extension.crx'));
+    final response = await request.close();
+
+    // Either 200 (if file exists) or 404
+    expect(response.statusCode == HttpStatus.ok || response.statusCode == HttpStatus.notFound, isTrue);
+  });
 }

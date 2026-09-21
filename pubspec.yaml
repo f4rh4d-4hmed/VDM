@@ -39,6 +39,7 @@ dependencies:
   crypto: ^3.0.7
   socks5_proxy: ^2.1.1
   ffmpeg_kit_flutter_new_min: ^3.6.2
+  flutter_svg: ^2.3.0
 
 dev_dependencies:
   flutter_test:
@@ -51,4 +52,5 @@ flutter:
     - extras/extension/
     - extras/extension/icons/
     - assets/icons/browsers/
+    - assets/icons/
 

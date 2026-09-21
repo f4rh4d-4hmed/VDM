@@ -20,6 +20,7 @@ import 'recheck_dialog.dart';
 import 'rename_dialog.dart';
 import 'settings_page.dart';
 import '../widgets/app_animated_dropdown.dart';
+import '../widgets/category_icon.dart';
 import '../widgets/speed_limit_icon.dart';
 
 class HomePage extends StatefulWidget {
@@ -1246,7 +1247,7 @@ class _HomePageState extends State<HomePage> {
                 padding: const EdgeInsets.only(right: 6.0),
                 child: _buildFilterChip(
                   label: AppUtils.getCategoryLabel(cat),
-                  icon: AppUtils.getCategoryIcon(cat),
+                  category: cat,
                   count: count,
                   isSelected: vm.categoryFilter == cat,
                   onSelected: () {
@@ -1266,14 +1267,22 @@ class _HomePageState extends State<HomePage> {
   Widget _buildFilterChip({
     required String label,
     IconData? icon,
+    DownloadCategory? category,
     required int count,
     required bool isSelected,
     required VoidCallback onSelected,
   }) {
+    Widget? avatar;
+    if (category != null) {
+      avatar = CategoryIcon(category, size: 16);
+    } else if (icon != null) {
+      avatar = Icon(icon, size: 16);
+    }
+
     return FilterChip(
       selected: isSelected,
       showCheckmark: false,
-      avatar: icon != null ? Icon(icon, size: 16) : null,
+      avatar: avatar,
       label: Row(
         mainAxisSize: MainAxisSize.min,
         children: [

@@ -32,6 +32,11 @@ migrate_working_dir/
 .pub/
 /build/
 /coverage/
+/dist/
+*.zip
+*.tar.gz
+*.apk
+*.exe
 
 # Symbolication related
 app.*.symbols
@@ -54,3 +59,4 @@ extras/ffmpeg/
 *.jks
 *.keystore
 key.properties
+*.pem

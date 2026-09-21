@@ -14,6 +14,7 @@ import 'hash_dialog.dart';
 import 'recheck_dialog.dart';
 import 'rename_dialog.dart';
 import 'virus_scanner_dialog.dart';
+import '../widgets/category_icon.dart';
 
 class DownloadTile extends StatefulWidget {
   final DownloadTask task;
@@ -577,7 +578,6 @@ class _DownloadTileState extends State<DownloadTile> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final statusColor = _getStatusColor(context);
-    final categoryIcon = AppUtils.getCategoryIcon(widget.task.category);
     final textScale = MediaQuery.textScalerOf(context).scale(1);
     final isLargeText = textScale >= 1.3;
 
@@ -681,7 +681,7 @@ class _DownloadTileState extends State<DownloadTile> {
                                   borderRadius: BorderRadius.circular(10),
                                 ),
                                 clipBehavior: Clip.antiAlias,
-                                child: _buildLeadingThumbnail(categoryIcon, theme),
+                                child: _buildLeadingThumbnail(theme),
                               ),
                               if (widget.task.fileMissing)
                                 Positioned(
@@ -982,7 +982,7 @@ class _DownloadTileState extends State<DownloadTile> {
     );
   }
 
-  Widget _buildLeadingThumbnail(IconData categoryIcon, ThemeData theme) {
+  Widget _buildLeadingThumbnail(ThemeData theme) {
     if (widget.task.status == DownloadStatus.completed &&
         _thumbnailPath != null &&
         File(_thumbnailPath!).existsSync()) {
@@ -993,16 +993,16 @@ class _DownloadTileState extends State<DownloadTile> {
         fit: BoxFit.cover,
         cacheWidth: 88,
         cacheHeight: 88,
-        errorBuilder: (_, __, ___) => Icon(
-          categoryIcon,
+        errorBuilder: (_, __, ___) => CategoryIcon(
+          widget.task.category,
           size: 22,
           color: theme.colorScheme.onSurfaceVariant,
         ),
       );
     }
 
-    return Icon(
-      categoryIcon,
+    return CategoryIcon(
+      widget.task.category,
       size: 22,
       color: theme.colorScheme.onSurfaceVariant,
     );

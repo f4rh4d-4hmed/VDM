@@ -82,16 +82,40 @@ jobs:
       - name: Build Windows Release
         run: flutter build windows --release --build-name=${{ needs.version.outputs.build_name }} --build-number=${{ needs.version.outputs.build_number }}
 
+      - name: Package Browser Extension
+        shell: bash
+        env:
+          EXTENSION_PEM_KEY: ${{ secrets.EXTENSION_PEM_KEY }}
+        run: |
+          python -m pip install crx3
+          python extras/pack_extension.py
+
+      - name: Build Windows Installer (Inno Setup)
+        shell: bash
+        run: |
+          mkdir -p dist
+          if command -v iscc >/dev/null 2>&1; then
+            ISCC_CMD="iscc"
+          elif [ -f "C:/Program Files (x86)/Inno Setup 6/ISCC.exe" ]; then
+            ISCC_CMD="C:/Program Files (x86)/Inno Setup 6/ISCC.exe"
+          elif [ -f "C:/Program Files/Inno Setup 6/ISCC.exe" ]; then
+            ISCC_CMD="C:/Program Files/Inno Setup 6/ISCC.exe"
+          else
+            choco install innosetup -y
+            ISCC_CMD="C:/Program Files (x86)/Inno Setup 6/ISCC.exe"
+          fi
+          "$ISCC_CMD" "/DMyAppVersion=${{ needs.version.outputs.build_name }}" "/DMyTag=${{ needs.version.outputs.tag }}" windows/installer/installer.iss
+
       - name: Compress Windows Build
         shell: bash
         run: |
-          7z a -tzip "VirusDownloader-Windows-x64-${{ needs.version.outputs.tag }}.zip" "./build/windows/x64/runner/Release/*"
+          7z a -tzip "dist/VirusDownloader-Windows-x64-${{ needs.version.outputs.tag }}.zip" "./build/windows/x64/runner/Release/*"
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: windows-release
-          path: VirusDownloader-Windows-x64-${{ needs.version.outputs.tag }}.zip
+          path: dist/*
           retention-days: 1
 
   # ============================================

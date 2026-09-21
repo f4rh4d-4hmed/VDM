@@ -24,9 +24,15 @@
   },
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
-      "js": ["content.js"],
-      "css": ["content.css"],
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "css": [
+        "content.css"
+      ],
       "all_frames": true,
       "run_at": "document_idle"
     }
@@ -44,6 +50,6 @@
   ],
   "host_permissions": [
     "<all_urls>"
-  ]
+  ],
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAh9jAQvU0z8B6f1g/8SBWfwCfyXpIBthx2JCGemwBbRWGF85w8UXUHiLDpvCcpVhQmdx4XcQ59b8KM4TQFV6cqR8r6JodbF1YUxQ+1o2ZyaMSx1z9/xAqkYJC8EIci0UgW1cHr341RPO5+k0HZJiAS+BQp4/qxvxkE7Y/tVw7pZ39KKBc54Lf+8B8s+zdNSEP1GGVhylm17F5HIAWp4VbjXNxzKcizdCbJmGhI7SQgLJhSD3xauOetPM7NCeYPR7K7QjJ8UwIeDN2bRc3zEYAuYhb0N5kfxI3EljUpuqLrCe+IyHm6h81cPwHrnTpOlBwuqnSYRkXlYq690UFaTADgQIDAQAB"
 }
-

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../core/enums.dart';
 import '../../core/utils.dart';
+import '../widgets/category_icon.dart';
 import '../../data/services/file_service.dart';
 import '../../data/services/http_download_service.dart';
 
@@ -374,7 +375,7 @@ class _AddDownloadDialogState extends State<AddDownloadDialog> {
                                 value: cat,
                                 child: Row(
                                   children: [
-                                    Icon(AppUtils.getCategoryIcon(cat), size: 18),
+                                    CategoryIcon(cat, size: 18),
                                     const SizedBox(width: 10),
                                     Text(AppUtils.getCategoryLabel(cat)),
                                   ],
