@@ -3,6 +3,7 @@ import '../../core/theme.dart';
 import '../../core/utils.dart';
 import '../../data/services/file_service.dart';
 import '../../domain/models/download_task.dart';
+import 'virus_scanner_dialog.dart';
 
 class DownloadCompleteDialog extends StatelessWidget {
   final DownloadTask task;
@@ -125,6 +126,14 @@ class DownloadCompleteDialog extends StatelessWidget {
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
           child: const Text('Dismiss'),
+        ),
+        OutlinedButton.icon(
+          icon: const Icon(Icons.shield_outlined, size: 18),
+          label: const Text('Scan'),
+          onPressed: () {
+            Navigator.of(context).pop();
+            VirusScannerDialog.show(context, task);
+          },
         ),
         if (AppUtils.isDesktop)
           OutlinedButton.icon(

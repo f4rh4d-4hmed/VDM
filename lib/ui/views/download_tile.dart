@@ -13,6 +13,7 @@ import 'change_download_link_dialog.dart';
 import 'hash_dialog.dart';
 import 'recheck_dialog.dart';
 import 'rename_dialog.dart';
+import 'virus_scanner_dialog.dart';
 
 class DownloadTile extends StatefulWidget {
   final DownloadTask task;
@@ -344,6 +345,16 @@ class _DownloadTileState extends State<DownloadTile> {
             ],
           ),
         ),
+        const PopupMenuItem(
+          value: 'virus_scan',
+          child: Row(
+            children: [
+              Icon(Icons.shield_outlined, size: 18),
+              SizedBox(width: 10),
+              Expanded(child: Text('Virus Scanner')),
+            ],
+          ),
+        ),
       ],
       const PopupMenuItem(
         value: 'rename',
@@ -483,6 +494,9 @@ class _DownloadTileState extends State<DownloadTile> {
         break;
       case 'hash':
         HashDialog.show(context, widget.task);
+        break;
+      case 'virus_scan':
+        VirusScannerDialog.show(context, widget.task);
         break;
       case 'copy_url':
         Clipboard.setData(ClipboardData(text: widget.task.url));

@@ -51,3 +51,6 @@ fix-git-index.ps1
 .vscode/tasks.json
 .vscode/settings.json
 extras/ffmpeg/
+*.jks
+*.keystore
+key.properties

@@ -7,6 +7,7 @@ import '../../data/services/background_service.dart';
 import '../../data/services/browser_integration_service.dart';
 import '../../data/services/integration_server_service.dart';
 import '../../data/services/proxy_service.dart';
+import '../../data/services/virus_total_service.dart';
 import '../../domain/models/app_settings.dart';
 import '../../domain/models/proxy_config.dart';
 
@@ -35,6 +36,7 @@ class SettingsViewModel extends ChangeNotifier {
   final IntegrationServerService integrationServer;
   final ProxyService? proxyService;
   final BackgroundService? backgroundService;
+  final VirusTotalService? virusTotalService;
 
   List<DetectedBrowser> _detectedBrowsers = [];
   bool _isDetectingBrowsers = false;
@@ -46,6 +48,7 @@ class SettingsViewModel extends ChangeNotifier {
     required this.integrationServer,
     this.proxyService,
     this.backgroundService,
+    this.virusTotalService,
   }) {
     integrationServer.addListener(_onServerStateChanged);
     initBrowserIntegration();
@@ -169,6 +172,29 @@ class SettingsViewModel extends ChangeNotifier {
     final updated = settings.copyWith(confirmDownloads: enabled);
     await repository.updateSettings(updated);
     notifyListeners();
+  }
+
+  Future<void> updateVirusTotalApiKey(String key) async {
+    final updated = settings.copyWith(virusTotalApiKey: key.trim());
+    await repository.updateSettings(updated);
+    notifyListeners();
+  }
+
+  Future<void> updateDesktopAntivirusHandover(bool enabled) async {
+    final updated = settings.copyWith(enableDesktopAntivirusHandover: enabled);
+    await repository.updateSettings(updated);
+    notifyListeners();
+  }
+
+  Future<void> updateAutoScanWithVirusTotal(bool enabled) async {
+    final updated = settings.copyWith(autoScanWithVirusTotal: enabled);
+    await repository.updateSettings(updated);
+    notifyListeners();
+  }
+
+  Future<bool> testVirusTotalApiKey(String key) async {
+    final service = virusTotalService ?? VirusTotalService();
+    return await service.validateApiKey(key);
   }
 
   String? addProxy(String input) {

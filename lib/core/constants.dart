@@ -28,5 +28,8 @@ class AppConstants {
   // Integration & Protocol Constants
   static const String protocolScheme = 'virusdownloader';
   static const int defaultServerPort = 9849;
+
+  // Virus scan constants
+  static const int maxAutoScanFileSizeBytes = 5 * 1024 * 1024 * 1024; // 5 GB
 }
 

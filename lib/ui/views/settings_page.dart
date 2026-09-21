@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../core/constants.dart';
 import '../../core/enums.dart';
 import '../../core/utils.dart';
@@ -266,6 +267,79 @@ class _SettingsPageState extends State<SettingsPage> {
               const ProxySettingsSection(),
 
               const SizedBox(height: 28),
+
+              // Security & Antivirus Section
+              Text(
+                'Security & Antivirus',
+                style: theme.textTheme.titleSmall?.copyWith(
+                  color: theme.colorScheme.primary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Card(
+                child: Column(
+                  children: [
+                    if (AppUtils.isDesktop) ...[
+                      SwitchListTile(
+                        title: const Text('Desktop Antivirus Handover'),
+                        subtitle: const Text(
+                          'Hand over files to native OS security protection during download',
+                        ),
+                        value: settings.enableDesktopAntivirusHandover,
+                        onChanged: (val) {
+                          settingsVm.updateDesktopAntivirusHandover(val);
+                        },
+                      ),
+                      const Divider(),
+                    ],
+                    ListTile(
+                      title: const Text('VirusTotal API Key'),
+                      subtitle: Text(
+                        settings.virusTotalApiKey.isNotEmpty
+                            ? '••••••••${settings.virusTotalApiKey.length > 6 ? settings.virusTotalApiKey.substring(settings.virusTotalApiKey.length - 6) : ""}'
+                            : 'Not configured (optional for cloud scanning)',
+                      ),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (settings.virusTotalApiKey.isNotEmpty)
+                            IconButton(
+                              tooltip: 'Test API Key',
+                              icon: const Icon(Icons.check_circle_outline, size: 20),
+                              onPressed: () async {
+                                final ok = await settingsVm.testVirusTotalApiKey(settings.virusTotalApiKey);
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(ok ? 'VirusTotal API key is valid!' : 'Invalid VirusTotal API key.'),
+                                      duration: const Duration(seconds: 2),
+                                    ),
+                                  );
+                                }
+                              },
+                            ),
+                          OutlinedButton(
+                            onPressed: () => _showApiKeyDialog(context, settingsVm),
+                            child: Text(settings.virusTotalApiKey.isNotEmpty ? 'Edit' : 'Add Key'),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Divider(),
+                    SwitchListTile(
+                      title: const Text('Auto-scan Completed Files (≤ 5 GB)'),
+                      subtitle: const Text(
+                        'Automatically scan completed downloads using VirusTotal',
+                      ),
+                      value: settings.autoScanWithVirusTotal,
+                      onChanged: (val) {
+                        settingsVm.updateAutoScanWithVirusTotal(val);
+                      },
+                    ),
+                  ],
+                ),
+              ),
 
               if (AppUtils.isMobile) ...[
                 // Background & Permissions Section (Android)
@@ -705,6 +779,58 @@ class _SettingsPageState extends State<SettingsPage> {
                 Text(desc, style: const TextStyle(color: Colors.grey, fontSize: 12)),
               ],
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showApiKeyDialog(BuildContext context, SettingsViewModel settingsVm) {
+    final controller = TextEditingController(text: settingsVm.settings.virusTotalApiKey);
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('VirusTotal API Key'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Enter your free VirusTotal API key to scan downloaded files for malware across all platforms.',
+              style: TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: controller,
+              decoration: const InputDecoration(
+                labelText: 'API Key',
+                border: OutlineInputBorder(),
+                isDense: true,
+              ),
+              style: const TextStyle(fontSize: 13),
+            ),
+            const SizedBox(height: 8),
+            TextButton(
+              onPressed: () => launchUrl(Uri.parse('https://www.virustotal.com/gui/my-apikey')),
+              child: const Text('Get API Key (virustotal.com)', style: TextStyle(fontSize: 11)),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              controller.clear();
+              settingsVm.updateVirusTotalApiKey('');
+              Navigator.of(ctx).pop();
+            },
+            child: const Text('Clear'),
+          ),
+          FilledButton(
+            onPressed: () {
+              settingsVm.updateVirusTotalApiKey(controller.text.trim());
+              Navigator.of(ctx).pop();
+            },
+            child: const Text('Save'),
           ),
         ],
       ),

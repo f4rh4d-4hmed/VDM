@@ -758,12 +758,15 @@ class DownloadRepository extends ChangeNotifier {
           recheckTask(taskId);
         }
 
-        // Attach Windows Mark of the Web (Zone.Identifier) for system antivirus scanning
-        await antivirusService.attachMarkOfTheWeb(
-          finalSavePath,
-          sourceUrl: current.url,
-          referrerUrl: current.headers?['Referer'] ?? current.headers?['referer'],
-        );
+        // Desktop built-in antivirus handover on completion
+        if (settings.enableDesktopAntivirusHandover && AppUtils.isDesktop) {
+          await antivirusService.performDesktopHandover(
+            finalSavePath,
+            sourceUrl: current.url,
+            referrerUrl: current.headers?['Referer'] ?? current.headers?['referer'],
+            fileSizeBytes: finalSize,
+          );
+        }
       }
     } on DioException catch (e) {
       if (CancelToken.isCancel(e)) {

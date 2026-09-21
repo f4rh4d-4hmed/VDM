@@ -15,6 +15,9 @@ class AppSettings {
   final bool runInBackground;
   final bool autoStartOnBoot;
   final bool confirmDownloads;
+  final String virusTotalApiKey;
+  final bool enableDesktopAntivirusHandover;
+  final bool autoScanWithVirusTotal;
 
   const AppSettings({
     this.defaultSavePath = '',
@@ -29,6 +32,9 @@ class AppSettings {
     this.runInBackground = false,
     this.autoStartOnBoot = false,
     this.confirmDownloads = true,
+    this.virusTotalApiKey = '',
+    this.enableDesktopAntivirusHandover = true,
+    this.autoScanWithVirusTotal = false,
   });
 
   AppSettings copyWith({
@@ -44,6 +50,9 @@ class AppSettings {
     bool? runInBackground,
     bool? autoStartOnBoot,
     bool? confirmDownloads,
+    String? virusTotalApiKey,
+    bool? enableDesktopAntivirusHandover,
+    bool? autoScanWithVirusTotal,
   }) {
     return AppSettings(
       defaultSavePath: defaultSavePath ?? this.defaultSavePath,
@@ -58,6 +67,9 @@ class AppSettings {
       runInBackground: runInBackground ?? this.runInBackground,
       autoStartOnBoot: autoStartOnBoot ?? this.autoStartOnBoot,
       confirmDownloads: confirmDownloads ?? this.confirmDownloads,
+      virusTotalApiKey: virusTotalApiKey ?? this.virusTotalApiKey,
+      enableDesktopAntivirusHandover: enableDesktopAntivirusHandover ?? this.enableDesktopAntivirusHandover,
+      autoScanWithVirusTotal: autoScanWithVirusTotal ?? this.autoScanWithVirusTotal,
     );
   }
 }

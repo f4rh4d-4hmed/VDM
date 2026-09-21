@@ -162,6 +162,26 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Setup Android Keystore
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          if [ -n "$ANDROID_KEYSTORE_BASE64" ]; then
+            echo "Configuring release keystore..."
+            echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android/app/keystore.jks
+            cat > android/key.properties <<EOF
+storePassword=$ANDROID_KEYSTORE_PASSWORD
+keyPassword=${ANDROID_KEY_PASSWORD:-$ANDROID_KEYSTORE_PASSWORD}
+keyAlias=$ANDROID_KEY_ALIAS
+storeFile=keystore.jks
+EOF
+          else
+            echo "No keystore secret found, falling back to debug signing."
+          fi
+
       - name: Build Android APK
         run: flutter build apk --release --build-name=${{ needs.version.outputs.build_name }} --build-number=${{ needs.version.outputs.build_number }}
 

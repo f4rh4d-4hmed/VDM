@@ -1,8 +1,13 @@
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import '../../core/enums.dart';
+import '../../core/utils.dart';
 import '../../data/repositories/download_repository.dart';
+import '../../data/services/antivirus_service.dart';
 import '../../data/services/integrity_service.dart';
+import '../../data/services/virus_total_service.dart';
 import '../../domain/models/download_task.dart';
+import '../../domain/models/virus_scan_result.dart';
 
 class DownloadsViewModel extends ChangeNotifier {
   final DownloadRepository repository;
@@ -11,6 +16,8 @@ class DownloadsViewModel extends ChangeNotifier {
   DownloadCategory _categoryFilter = DownloadCategory.all;
   String _searchQuery = '';
   SortOrder _sortOrder = SortOrder.dateAdded;
+
+  final Set<String> _autoScannedTaskIds = {};
 
   DownloadsViewModel({required this.repository}) {
     repository.addListener(_onRepositoryUpdated);
@@ -23,6 +30,15 @@ class DownloadsViewModel extends ChangeNotifier {
   }
 
   void _onRepositoryUpdated() {
+    final settings = repository.settingsRepo.currentSettings;
+    if (settings.autoScanWithVirusTotal && settings.virusTotalApiKey.isNotEmpty) {
+      for (final t in repository.tasks) {
+        if (t.status == DownloadStatus.completed && !_autoScannedTaskIds.contains(t.id)) {
+          _autoScannedTaskIds.add(t.id);
+          scanTaskWithVirusScanner(t.id);
+        }
+      }
+    }
     notifyListeners();
   }
 
@@ -249,5 +265,128 @@ class DownloadsViewModel extends ChangeNotifier {
     void Function(double progress, String status)? onProgress,
   }) =>
       repository.findZeroPieces(id, pieceSize: pieceSize, onProgress: onProgress);
+
+  final VirusTotalService _virusTotalService = VirusTotalService();
+  final Map<String, VirusScanResult> _virusScanResults = {};
+
+  VirusScanResult? getVirusScanResult(String taskId) => _virusScanResults[taskId];
+
+  /// Scans a task using the dual-engine Virus Scanner:
+  /// - Desktop Built-in Antivirus Handover (Desktop only)
+  /// - VirusTotal v3 Hash lookup (All platforms)
+  /// Files <= 5 GB are scanned automatically. Files > 5 GB require [forceManualScan] = true.
+  Future<VirusScanResult> scanTaskWithVirusScanner(
+    String taskId, {
+    bool forceManualScan = false,
+    String? customApiKey,
+  }) async {
+    final taskIndex = repository.tasks.indexWhere((t) => t.id == taskId);
+    if (taskIndex == -1) {
+      final res = VirusScanResult.error(message: 'Task not found.');
+      _virusScanResults[taskId] = res;
+      notifyListeners();
+      return res;
+    }
+    final task = repository.tasks[taskIndex];
+    final file = File(task.savePath);
+    if (!await file.exists()) {
+      final res = VirusScanResult.error(message: 'File not found on disk: ${task.savePath}');
+      _virusScanResults[taskId] = res;
+      notifyListeners();
+      return res;
+    }
+
+    final fileSize = await file.length();
+
+    // 1. Desktop Antivirus Handover (Desktop only)
+    DesktopHandoverResult? handoverResult;
+    if (AppUtils.isDesktop && repository.settingsRepo.currentSettings.enableDesktopAntivirusHandover) {
+      handoverResult = await repository.antivirusService.performDesktopHandover(
+        task.savePath,
+        sourceUrl: task.url,
+        referrerUrl: task.headers?['Referer'] ?? task.headers?['referer'],
+        fileSizeBytes: fileSize,
+        forceManualScan: forceManualScan,
+      );
+    }
+
+    // 2. Check 5 GB boundary for automatic detection
+    if (!forceManualScan && !repository.antivirusService.shouldAutoScan(fileSize)) {
+      final res = VirusScanResult.skippedTooLarge(
+        fileSizeBytes: fileSize,
+        desktopAntivirusHandedOver: handoverResult?.success ?? false,
+        desktopAntivirusDetails: handoverResult?.details,
+      );
+      _virusScanResults[taskId] = res;
+      notifyListeners();
+      return res;
+    }
+
+    // 3. Compute SHA-256 hash using IntegrityService
+    final integrityService = repository.integrityService ?? IntegrityService();
+    final sha256Hash = await integrityService.calculateFileHash(
+      task.savePath,
+      HashAlgorithm.sha256,
+    );
+
+    // 4. VirusTotal lookup
+    final apiKey = (customApiKey != null && customApiKey.isNotEmpty)
+        ? customApiKey.trim()
+        : repository.settingsRepo.currentSettings.virusTotalApiKey;
+
+    if (apiKey.isEmpty) {
+      final res = VirusScanResult(
+        status: VirusScanStatus.notFound,
+        fileSha256: sha256Hash,
+        fileSizeBytes: fileSize,
+        errorMessage: 'VirusTotal API key is not configured.',
+        desktopAntivirusHandedOver: handoverResult?.success ?? false,
+        desktopAntivirusDetails: handoverResult?.details,
+      );
+      _virusScanResults[taskId] = res;
+      notifyListeners();
+      return res;
+    }
+
+    final res = await _virusTotalService.scanFileHash(
+      sha256Hash,
+      apiKey,
+      fileSizeBytes: fileSize,
+      desktopAntivirusHandedOver: handoverResult?.success ?? false,
+      desktopAntivirusDetails: handoverResult?.details,
+      forceManualScan: forceManualScan,
+    );
+
+    _virusScanResults[taskId] = res;
+    notifyListeners();
+    return res;
+  }
+
+  Future<VirusScanResult> uploadTaskToVirusTotal(
+    String taskId, {
+    String? customApiKey,
+    void Function(double progress)? onProgress,
+  }) async {
+    final taskIndex = repository.tasks.indexWhere((t) => t.id == taskId);
+    if (taskIndex == -1) {
+      return VirusScanResult.error(message: 'Task not found.');
+    }
+    final task = repository.tasks[taskIndex];
+    final apiKey = (customApiKey != null && customApiKey.isNotEmpty)
+        ? customApiKey.trim()
+        : repository.settingsRepo.currentSettings.virusTotalApiKey;
+
+    final cached = _virusScanResults[taskId];
+
+    final res = await _virusTotalService.uploadAndScanFile(
+      task.savePath,
+      apiKey,
+      sha256Hash: cached?.fileSha256,
+      onProgress: onProgress,
+    );
+    _virusScanResults[taskId] = res;
+    notifyListeners();
+    return res;
+  }
 }
 

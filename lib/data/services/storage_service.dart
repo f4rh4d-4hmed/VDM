@@ -87,6 +87,9 @@ class StorageService {
         runInBackground: data['runInBackground'] as bool? ?? false,
         autoStartOnBoot: data['autoStartOnBoot'] as bool? ?? false,
         confirmDownloads: data['confirmDownloads'] as bool? ?? true,
+        virusTotalApiKey: data['virusTotalApiKey'] as String? ?? '',
+        enableDesktopAntivirusHandover: data['enableDesktopAntivirusHandover'] as bool? ?? true,
+        autoScanWithVirusTotal: data['autoScanWithVirusTotal'] as bool? ?? false,
       );
     } catch (_) {
       return const AppSettings();
@@ -109,6 +112,9 @@ class StorageService {
       'runInBackground': settings.runInBackground,
       'autoStartOnBoot': settings.autoStartOnBoot,
       'confirmDownloads': settings.confirmDownloads,
+      'virusTotalApiKey': settings.virusTotalApiKey,
+      'enableDesktopAntivirusHandover': settings.enableDesktopAntivirusHandover,
+      'autoScanWithVirusTotal': settings.autoScanWithVirusTotal,
     };
     await prefs.setString(AppConstants.storageKeySettings, jsonEncode(data));
   }
