@@ -81,23 +81,45 @@ class TaskbarService {
 
   void _setMode(int mode) {
     if (_currentMode != mode) {
+      final prevMode = _currentMode;
       _currentMode = mode;
       if (mockSetProgressMode != null) {
         mockSetProgressMode!(mode);
       } else {
-        WindowsTaskbar.setProgressMode(mode);
+        WindowsTaskbar.setProgressMode(mode).catchError((e) {
+          debugPrint('WindowsTaskbar.setProgressMode error: $e');
+          // Reset so subsequent ticks will retry once window is ready/visible
+          _currentMode = prevMode;
+        });
       }
     }
   }
 
   void _setProgress(int completed, int total) {
-    if (_lastCompleted != completed || _lastTotal != total) {
-      _lastCompleted = completed;
-      _lastTotal = total;
+    // WindowsTaskbar plugin uses int32_t internally (max 2,147,483,647).
+    // For downloads larger than 10,000 bytes (especially > 2GB files),
+    // normalize the progress to 0-10,000 range to prevent int32 overflow
+    // and int64 variant type mismatch in the native Windows plugin.
+    int safeCompleted = completed;
+    int safeTotal = total;
+    if (safeTotal > 10000) {
+      safeCompleted = ((completed / total) * 10000).clamp(0, 10000).toInt();
+      safeTotal = 10000;
+    }
+
+    if (_lastCompleted != safeCompleted || _lastTotal != safeTotal) {
+      final prevCompleted = _lastCompleted;
+      final prevTotal = _lastTotal;
+      _lastCompleted = safeCompleted;
+      _lastTotal = safeTotal;
       if (mockSetProgress != null) {
-        mockSetProgress!(completed, total);
+        mockSetProgress!(safeCompleted, safeTotal);
       } else {
-        WindowsTaskbar.setProgress(completed, total);
+        WindowsTaskbar.setProgress(safeCompleted, safeTotal).catchError((e) {
+          debugPrint('WindowsTaskbar.setProgress error: $e');
+          _lastCompleted = prevCompleted;
+          _lastTotal = prevTotal;
+        });
       }
     }
   }

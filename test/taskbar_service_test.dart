@@ -128,6 +128,21 @@ void main() {
       expect(service.currentMode, TaskbarProgressMode.noProgress);
       expect(recordedMode, TaskbarProgressMode.noProgress);
     });
+
+    test('updateProgress with large file (> 2GB) scales safely to 10,000 without int32 overflow', () {
+      // 5 GB file with 2.5 GB downloaded (50%)
+      const fiveGb = 5 * 1024 * 1024 * 1024;
+      const twoAndHalfGb = 2560 * 1024 * 1024;
+      final tasks = [
+        createTask(id: '1', status: DownloadStatus.downloading, downloaded: twoAndHalfGb, total: fiveGb),
+      ];
+
+      service.updateProgress(tasks);
+      expect(service.currentMode, TaskbarProgressMode.normal);
+      expect(recordedMode, TaskbarProgressMode.normal);
+      expect(recordedCompleted, 5000);
+      expect(recordedTotal, 10000);
+    });
   });
 }
 

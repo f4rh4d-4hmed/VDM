@@ -141,6 +141,9 @@ void main([List<String> args = const []]) async {
     }
   }
 
+  final taskbarService = TaskbarService();
+  DownloadRepository? downloadRepository;
+
   // Desktop Main Window Configuration
   if (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
     try {
@@ -154,6 +157,9 @@ void main([List<String> args = const []]) async {
       windowManager.waitUntilReadyToShow(windowOptions, () async {
         await windowManager.show();
         await windowManager.focus();
+        if (downloadRepository != null) {
+          taskbarService.updateProgress(downloadRepository.tasks);
+        }
       });
     } catch (e) {
       debugPrint('Window manager initialization failed: $e');
@@ -182,7 +188,6 @@ void main([List<String> args = const []]) async {
   );
 
   final backgroundService = BackgroundService();
-  final taskbarService = TaskbarService();
 
   final settingsRepository = SettingsRepository(storageService: storageService);
   await settingsRepository.init();
@@ -191,7 +196,7 @@ void main([List<String> args = const []]) async {
     await backgroundService.startBackgroundService();
   }
 
-  final downloadRepository = DownloadRepository(
+  final repo = DownloadRepository(
     httpService: httpService,
     segmentedService: segmentedService,
     storageService: storageService,
@@ -201,18 +206,19 @@ void main([List<String> args = const []]) async {
     notificationService: notificationService,
     integrityService: integrityService,
   );
-  await downloadRepository.init();
+  downloadRepository = repo;
+  await repo.init();
 
   // Wire Taskbar Progress updates on desktop
-  downloadRepository.addListener(() {
-    taskbarService.updateProgress(downloadRepository.tasks);
+  repo.addListener(() {
+    taskbarService.updateProgress(repo.tasks);
   });
-  taskbarService.updateProgress(downloadRepository.tasks);
+  taskbarService.updateProgress(repo.tasks);
 
   // Initialize Browser Integration & Start Local Server
   final browserIntegrationService = BrowserIntegrationService();
   final integrationServer = IntegrationServerService(
-    downloadRepository: downloadRepository,
+    downloadRepository: repo,
     fileService: fileService,
   );
   if (!AppUtils.isMobile) {
@@ -243,7 +249,7 @@ void main([List<String> args = const []]) async {
         );
       } catch (_) {}
     } else {
-      await downloadRepository.addTask(
+      await repo.addTask(
         url: taskUrl,
         fileName: taskFile,
         targetDirectory: targetDir,
@@ -271,12 +277,12 @@ void main([List<String> args = const []]) async {
         ChangeNotifierProvider<IntegrationServerService>.value(value: integrationServer),
 
         // Repositories
-        ChangeNotifierProvider<DownloadRepository>.value(value: downloadRepository),
+        ChangeNotifierProvider<DownloadRepository>.value(value: repo),
         Provider<SettingsRepository>.value(value: settingsRepository),
 
         // ViewModels
         ChangeNotifierProvider<DownloadsViewModel>(
-          create: (_) => DownloadsViewModel(repository: downloadRepository),
+          create: (_) => DownloadsViewModel(repository: repo),
         ),
         ChangeNotifierProvider<SettingsViewModel>(
           create: (_) => SettingsViewModel(
